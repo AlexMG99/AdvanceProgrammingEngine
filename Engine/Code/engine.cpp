@@ -194,6 +194,26 @@ void Gui(App* app)
 {
     ImGui::Begin("Info");
     ImGui::Text("FPS: %f", 1.0f/app->deltaTime);
+    if (ImGui::CollapsingHeader("OpenGL Info"))
+    {
+        std::string openGL = "OpenGL version: ";
+        ImGui::Text((openGL + app->glInfo.version).c_str());
+        openGL = "OpenGL renderer: ";
+        ImGui::Text((openGL + app->glInfo.renderer).c_str());
+        openGL = "OpenGL vendor: ";
+        ImGui::Text((openGL + app->glInfo.vendor).c_str());
+        openGL = "OpenGL GLSL version: ";
+        ImGui::Text((openGL + app->glInfo.shadingLanguage).c_str());
+        openGL = "OpenGL extensions: ";
+
+        GLint numExtension;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &numExtension);
+        for (int i = 0; i < numExtension; i++)
+        {
+            openGL += app->glInfo.extensions[i] + "\n                   ";
+        }
+        ImGui::Text(openGL.c_str());
+    }
     ImGui::End();
 }
 

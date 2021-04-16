@@ -42,6 +42,15 @@ enum Mode
     Mode_Count
 };
 
+struct OpenGLInfo
+{
+    std::string version;
+    std::string renderer;
+    std::string vendor;
+    std::string shadingLanguage;
+    std::string* extensions;
+};
+
 struct App
 {
     // Loop
@@ -83,6 +92,9 @@ struct App
 
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
+
+    // OpenGL information
+    OpenGLInfo glInfo;
 };
 
 void Init(App* app);

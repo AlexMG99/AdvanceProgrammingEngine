@@ -114,9 +114,26 @@ void OnGlfwCloseWindow(GLFWwindow* window)
     app->isRunning = false;
 }
 
+void InitOpenGLInfo(App* app)
+{
+    app->glInfo.version = std::string((const char*)glGetString(GL_VERSION));
+    app->glInfo.renderer = std::string((const char*)glGetString(GL_RENDERER));
+    app->glInfo.vendor = std::string((const char*)glGetString(GL_VENDOR));
+    app->glInfo.shadingLanguage = std::string((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    GLint numExtension;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &numExtension);
+    app->glInfo.extensions = new std::string[numExtension];
+    for (int i = 0; i < numExtension; i++)
+    {
+        app->glInfo.extensions[i] = std::string((const char*)glGetStringi(GL_EXTENSIONS, GLuint(i)));
+    }
+
+}
+
 int main()
 {
-    App app         = {};
+    App app         ;
     app.deltaTime   = 1.0f/60.0f;
     app.displaySize = ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
     app.isRunning   = true;
@@ -200,6 +217,8 @@ int main()
     GlobalFrameArenaMemory = (u8*)malloc(GLOBAL_FRAME_ARENA_SIZE);
 
     Init(&app);
+
+    InitOpenGLInfo(&app);
 
     while (app.isRunning)
     {

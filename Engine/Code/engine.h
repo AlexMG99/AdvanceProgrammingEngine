@@ -14,43 +14,6 @@ typedef glm::ivec2 ivec2;
 typedef glm::ivec3 ivec3;
 typedef glm::ivec4 ivec4;
 
-struct Image
-{
-    void* pixels;
-    ivec2 size;
-    i32   nchannels;
-    i32   stride;
-};
-
-struct Texture
-{
-    GLuint      handle;
-    std::string filepath;
-};
-
-struct Program
-{
-    GLuint             handle;
-    std::string        filepath;
-    std::string        programName;
-    u64                lastWriteTimestamp; // What is this for?
-};
-
-enum Mode
-{
-    Mode_TexturedQuad,
-    Mode_Count
-};
-
-struct OpenGLInfo
-{
-    std::string version;
-    std::string renderer;
-    std::string vendor;
-    std::string shadingLanguage;
-    std::string* extensions;
-};
-
 // Buffers
 struct VertexBufferAttribute
 {
@@ -74,6 +37,46 @@ struct VertexShaderAttribute
 struct VertexShaderLayout
 {
     std::vector<VertexShaderAttribute>  attributes;
+};
+
+struct Image
+{
+    void* pixels;
+    ivec2 size;
+    i32   nchannels;
+    i32   stride;
+};
+
+struct Texture
+{
+    GLuint      handle;
+    std::string filepath;
+};
+
+struct Program
+{
+    GLuint             handle;
+    std::string        filepath;
+    std::string        programName;
+    u64                lastWriteTimestamp; // What is this for?
+
+    VertexBufferLayout vertexBufferLayout;
+    VertexShaderLayout vertexInputLayout;
+};
+
+enum Mode
+{
+    Mode_TexturedQuad,
+    Mode_Count
+};
+
+struct OpenGLInfo
+{
+    std::string version;
+    std::string renderer;
+    std::string vendor;
+    std::string shadingLanguage;
+    std::string* extensions;
 };
 
 struct Vao
@@ -163,6 +166,8 @@ struct App
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
+
+    GLint textureMeshProgram_uTexture;
     
     // texture indices
     u32 diceTexIdx;
@@ -170,8 +175,6 @@ struct App
     u32 blackTexIdx;
     u32 normalTexIdx;
     u32 magentaTexIdx;
-
-
 
     // Mode
     Mode mode;

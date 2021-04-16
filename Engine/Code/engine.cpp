@@ -109,7 +109,6 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
         GLint attributeSize;
         GLenum attributeType;
 
-
         glGetActiveAttrib(program.handle, i,
             ARRAY_COUNT(attributeName),
             &attributeNameLenght,
@@ -227,9 +226,9 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
         // We have to link all vertex inputs attributes to attribute in the vertex buffer
         for (u32 i = 0; i < program.vertexInputLayout.attributes.size(); ++i)
         {
-            for (u32 j = 0; j < program.vertexBufferLayout.attributes.size(); ++j)
+            for (u32 j = 0; j < submesh.vertexBufferLayout.attributes.size(); ++j)
             {
-                if (program.vertexInputLayout.attributes[i].location == submesh.vertexBufferLayout.attributes[i].location)
+                if (program.vertexInputLayout.attributes[i].location == submesh.vertexBufferLayout.attributes[j].location)
                 {
                     const u32 index = submesh.vertexBufferLayout.attributes[j].location;
                     const u32 ncomp = submesh.vertexBufferLayout.attributes[j].componentCount;
@@ -264,10 +263,10 @@ void Init(App* app)
     //vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 }); // 3D Positions
     //vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, 3 * sizeof(float) }); // texCoords
 
-
     // Load Program
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+    app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
     LoadModel(app, "Patrick/Patrick.obj");
     // Geometry
@@ -297,8 +296,6 @@ void Init(App* app)
     app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
     app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
-
-    app->diceTexIdx = LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
     app->blackTexIdx = LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
@@ -368,7 +365,7 @@ void Render(App* app)
             glBindVertexArray(0);
             glUseProgram(0);*/
 
-             Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
             glUseProgram(texturedMeshProgram.handle);
 
             for (int i = 0; i < app->models.size(); ++i)
@@ -384,9 +381,9 @@ void Render(App* app)
                     u32 submeshMaterialIdx = model.materialIdx[i];
                     Material& submeshMaterial = app->materials[submeshMaterialIdx];
 
+                    glUniform1i(app->textureMeshProgram_uTexture, 0);
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->textureMeshProgram_uTexture, 0);
 
                     Submesh& submesh = mesh.submeshes[i];
                     glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

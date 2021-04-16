@@ -17,11 +17,11 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     GLsizei infoLogSize;
     GLint   success;
 
-    char versionString[] = "#version 430/n";
+    char versionString[] = "#version 430\n";
     char shaderNameDefine[128];
-    sprintf(shaderNameDefine, "#define %s/n", shaderName);
-    char vertexShaderDefine[] = "#define VERTEX/n";
-    char fragmentShaderDefine[] = "#define FRAGMENT/n";
+    sprintf(shaderNameDefine, "#define %s\n", shaderName);
+    char vertexShaderDefine[] = "#define VERTEX\n";
+    char fragmentShaderDefine[] = "#define FRAGMENT\n";
 
     const GLchar* vertexShaderSource[] = {
         versionString,
@@ -55,7 +55,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     if (!success)
     {
         glGetShaderInfoLog(vshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glCompileShader() failed with vertex shader %s/nReported message:/n%s/n", shaderName, infoLogBuffer);
+        ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
     }
 
     GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -65,7 +65,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     if (!success)
     {
         glGetShaderInfoLog(fshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glCompileShader() failed with fragment shader %s/nReported message:/n%s/n", shaderName, infoLogBuffer);
+        ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
     }
 
     GLuint programHandle = glCreateProgram();
@@ -76,7 +76,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     if (!success)
     {
         glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glLinkProgram() failed with program %s/nReported message:/n%s/n", shaderName, infoLogBuffer);
+        ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
     }
 
     glUseProgram(0);
@@ -266,10 +266,10 @@ void Init(App* app)
 
 
     // Load Program
-    app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");
+    app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 
-    LoadModel(app, "E:/Documents/GitHub/AdvanceProgrammingEngine/Engine/WorkingDir/Patrick/Patrick.obj");
+    LoadModel(app, "Patrick/Patrick.obj");
     // Geometry
     /*glGenBuffers(1, &app->embeddedVertices);
     glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
@@ -327,7 +327,7 @@ void Gui(App* app)
         glGetIntegerv(GL_NUM_EXTENSIONS, &numExtension);
         for (int i = 0; i < numExtension; i++)
         {
-            openGL += app->glInfo.extensions[i] + "/n                   ";
+            openGL += app->glInfo.extensions[i] + "\n                   ";
         }
         ImGui::Text(openGL.c_str());
     }

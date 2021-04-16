@@ -51,6 +51,76 @@ struct OpenGLInfo
     std::string* extensions;
 };
 
+// Buffers
+struct VertexBufferAttribute
+{
+    u8 location;
+    u8 componentCount;
+    u8 offset;
+};
+
+struct VertexBufferLayout
+{
+    std::vector<VertexBufferAttribute>  attributes;
+    u8                                  stride;
+};
+
+struct VertexShaderAttribute
+{
+    u8 location;
+    u8 componentCount;
+};
+
+struct VertexShaderLayout
+{
+    std::vector<VertexShaderAttribute>  attributes;
+};
+
+struct Vao
+{
+    GLuint handle;
+    GLuint programHandle;
+};
+
+// FBX components
+struct Model 
+{
+    u32                 meshIdx;
+    std::vector<u32>    materialIdx;
+};
+
+struct Submesh
+{
+    VertexBufferLayout  vertexBufferLayout;
+    std::vector<float>  vertices;
+    std::vector<u32>    indices;
+    u32                 vertexOffset;
+    u32                 indexOffset;
+
+    std::vector<Vao>    vaos;
+};
+
+struct Mesh
+{
+    std::vector<Submesh> submeshes;
+    GLuint vertexBufferHandle;
+    GLuint indexBufferHandle;
+};
+
+struct Material
+{
+    std::string name;
+    vec3 albedo;
+    vec3 emissice;
+    f32 smoothness;
+    u32 albedoTextureIdx;
+    u32 emissiveTextureIdx;
+    u32 specularTextureIdx;
+    u32 normalsTextureIdx;
+    u32 bumpTextureIdx;
+};
+
+// Image Example
 struct VertexV3V2
 {
     glm::vec3 pos;
@@ -84,11 +154,15 @@ struct App
 
     ivec2 displaySize;
 
-    std::vector<Texture>  textures;
+    std::vector<Texture>    textures;
+    std::vector<Material>   materials;
+    std::vector<Mesh>       meshes;
+    std::vector<Model>      models;
     std::vector<Program>  programs;
 
     // program indices
     u32 texturedGeometryProgramIdx;
+    u32 texturedMeshProgramIdx;
     
     // texture indices
     u32 diceTexIdx;
@@ -96,6 +170,8 @@ struct App
     u32 blackTexIdx;
     u32 normalTexIdx;
     u32 magentaTexIdx;
+
+
 
     // Mode
     Mode mode;

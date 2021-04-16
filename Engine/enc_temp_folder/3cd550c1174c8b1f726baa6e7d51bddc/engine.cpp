@@ -368,7 +368,7 @@ void Render(App* app)
             glBindVertexArray(0);
             glUseProgram(0);*/
 
-             Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
             glUseProgram(texturedMeshProgram.handle);
 
             for (int i = 0; i < app->models.size(); ++i)

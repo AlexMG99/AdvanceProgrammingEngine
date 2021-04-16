@@ -6,6 +6,10 @@
 
 #include "platform.h"
 #include <glad/glad.h>
+#include "assimp_model_loading.h"
+#include "Program.h"
+
+
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -13,31 +17,6 @@ typedef glm::vec4  vec4;
 typedef glm::ivec2 ivec2;
 typedef glm::ivec3 ivec3;
 typedef glm::ivec4 ivec4;
-
-// Buffers
-struct VertexBufferAttribute
-{
-    u8 location;
-    u8 componentCount;
-    u8 offset;
-};
-
-struct VertexBufferLayout
-{
-    std::vector<VertexBufferAttribute>  attributes;
-    u8                                  stride;
-};
-
-struct VertexShaderAttribute
-{
-    u8 location;
-    u8 componentCount;
-};
-
-struct VertexShaderLayout
-{
-    std::vector<VertexShaderAttribute>  attributes;
-};
 
 struct Image
 {
@@ -53,16 +32,6 @@ struct Texture
     std::string filepath;
 };
 
-struct Program
-{
-    GLuint             handle;
-    std::string        filepath;
-    std::string        programName;
-    u64                lastWriteTimestamp; // What is this for?
-
-    VertexBufferLayout vertexBufferLayout;
-    VertexShaderLayout vertexInputLayout;
-};
 
 enum Mode
 {
@@ -114,7 +83,7 @@ struct Material
 {
     std::string name;
     vec3 albedo;
-    vec3 emissice;
+    vec3 emissive;
     f32 smoothness;
     u32 albedoTextureIdx;
     u32 emissiveTextureIdx;
@@ -201,4 +170,6 @@ void Gui(App* app);
 void Update(App* app);
 
 void Render(App* app);
+
+u32 LoadTexture2D(App* app, const char* filepath);
 

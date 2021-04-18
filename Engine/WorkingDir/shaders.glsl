@@ -12,24 +12,31 @@ layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
 
+uniform mat4 uObjMatrix;
+uniform mat4 uWorldMatrix;
+uniform mat4 uViewProjectMatrix;
+
 out vec2 vTexCoord;
+out vec3 vPosition;
+out vec3 vNormal;
+out vec3 vViewDir;
 
 void main()
 {
-	float clippingScale = 5.0;
+	vTexCoord	= aTexCoord;
+	// vPosition	= vec3(uViewProjectMatrix * vec4(aPosition, 1.0));
+	//vNormal		= vec3(uViewProjectMatrix * vec4(aNormal, 1.0));
 
-	gl_Position = vec4(aPosition, clippingScale);
-
-	// Flip Patrick
-	gl_Position.z = -gl_Position.z;
-
-	vTexCoord = aTexCoord;
+	gl_Position = uViewProjectMatrix * vec4(aPosition, 1.0);
 
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
 in vec2 vTexCoord;
+in vec3 vPosition;
+in vec3 vNormal;
+in vec3 vViewDir;
 
 uniform sampler2D uTexture;
 

@@ -8,8 +8,7 @@
 #include <glad/glad.h>
 #include "assimp_model_loading.h"
 #include "Program.h"
-
-
+#include "camera.h"
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -160,6 +159,9 @@ struct App
 
     // OpenGL information
     OpenGLInfo glInfo;
+
+    // Camera
+    Camera* cam;
 };
 
 void Init(App* app);

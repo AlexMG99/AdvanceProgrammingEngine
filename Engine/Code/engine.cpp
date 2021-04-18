@@ -256,12 +256,17 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 
 }
 
+void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
+{
+    GLuint MatrixID = glGetUniformLocation(programID, name);
+
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mat4));
+}
+
 void Init(App* app)
 {
-    // Create the vertex format
-    //VertexBufferLayout vertexBufferLayout = {};
-    //vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 }); // 3D Positions
-    //vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, 3 * sizeof(float) }); // texCoords
+    // Create Camera
+    app->cam = new Camera();
 
     // Load Program
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
@@ -269,37 +274,6 @@ void Init(App* app)
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
     LoadModel(app, "Patrick/Patrick.obj");
-    // Geometry
-    /*glGenBuffers(1, &app->embeddedVertices);
-    glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenBuffers(1, &app->embeddedElements);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-
-    // Attribute
-    glGenVertexArrays(1, &app->vao);
-    glBindVertexArray(app->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)12);
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
-    glBindVertexArray(0);
-
-    // Paint texture quad
-    app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
-    Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-    app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
-    app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
-    app->blackTexIdx = LoadTexture2D(app, "color_black.png");
-    app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
-    app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");*/
 
     app->mode = Mode_TexturedQuad;
 }
@@ -308,6 +282,21 @@ void Gui(App* app)
 {
     ImGui::Begin("Info");
     ImGui::Text("FPS: %f", 1.0f/app->deltaTime);
+
+    ImGui::Separator();
+
+    ImGui::Text("Camera options:"); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("X    ", &app->cam->position.x); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Y    ", &app->cam->position.y); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Z    ", &app->cam->position.z); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("Pitch", &app->cam->rotation.x); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Yaw  ", &app->cam->rotation.y); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Roll ", &app->cam->rotation.z);
+
+    ImGui::Separator();
+
     if (ImGui::CollapsingHeader("OpenGL Info"))
     {
         std::string openGL = "OpenGL version: ";
@@ -328,12 +317,15 @@ void Gui(App* app)
         }
         ImGui::Text(openGL.c_str());
     }
+
+
     ImGui::End();
 }
 
 void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
+    app->cam->Update();
 }
 
 void Render(App* app)
@@ -348,25 +340,11 @@ void Render(App* app)
 
             glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-            /*Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-            glUseProgram(texturedGeometryProgram.handle);
-            glBindVertexArray(app->vao);
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            glUniform1i(app->programUniformTexture, 0);
-            glActiveTexture(GL_TEXTURE0);
-            GLuint textureHandle = app->textures[app->diceTexIdx].handle;
-            glBindTexture(GL_TEXTURE_2D, textureHandle);
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-
-            glBindVertexArray(0);
-            glUseProgram(0);*/
-
             Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
             glUseProgram(texturedMeshProgram.handle);
+
+            // Uniform parameters
+            glUniformMatrix4(texturedMeshProgram.handle, "uViewProjectMatrix", app->cam->projViewMatrix);
 
             for (int i = 0; i < app->models.size(); ++i)
             {

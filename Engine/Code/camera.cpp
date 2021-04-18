@@ -19,14 +19,14 @@ void Camera::Update()
 void Camera::CalculateProjViewMatrix()
 {
 	glm::vec3 direction;
-	direction.x = cos(glm::radians(rotation[1])) * cos(glm::radians(rotation[0]));
-	direction.y = sin(glm::radians(rotation[0]));
-	direction.z = sin(glm::radians(rotation[1])) * cos(glm::radians(rotation[0]));
+	direction.x = cos(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
+	direction.y = sin(glm::radians(rotation.x));
+	direction.z = sin(glm::radians(rotation.y)) * cos(glm::radians(rotation.x));
 
 	// Calculate 
 	front = glm::normalize(direction);
 	glm::vec3 globalUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	right = glm::normalize(glm::cross(globalUp, direction));
+	right = glm::normalize(glm::cross(globalUp, front));
 	up = glm::cross(direction, right);
 
 	viewMatrix = glm::lookAt(position, position + front, up);

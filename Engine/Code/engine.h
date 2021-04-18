@@ -9,6 +9,7 @@
 #include "assimp_model_loading.h"
 #include "Program.h"
 #include "camera.h"
+#include "Entity.h"
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -129,8 +130,8 @@ struct App
     std::vector<Material>   materials;
     std::vector<Mesh>       meshes;
     std::vector<Model>      models;
-    std::vector<Program>  programs;
-
+    std::vector<Program>    programs;
+    std::vector<Entity>     entities;
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
@@ -162,6 +163,7 @@ struct App
 
     // Camera
     Camera* cam;
+
 };
 
 void Init(App* app);

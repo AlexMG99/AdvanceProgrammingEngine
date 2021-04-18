@@ -27,7 +27,7 @@ void main()
 	// vPosition	= vec3(uViewProjectMatrix * vec4(aPosition, 1.0));
 	//vNormal		= vec3(uViewProjectMatrix * vec4(aNormal, 1.0));
 
-	gl_Position = uViewProjectMatrix * vec4(aPosition, 1.0);
+	gl_Position = uViewProjectMatrix * uWorldMatrix * vec4(aPosition, 1.0);
 
 }
 

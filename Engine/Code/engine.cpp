@@ -276,6 +276,11 @@ void Init(App* app)
     LoadModel(app, "Patrick/Patrick.obj");
 
     app->mode = Mode_TexturedQuad;
+
+    //Entities =====
+    app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0)));
+    app->entities.push_back(Entity(vec3(2.0, 0.0, 0.0)));
+    app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
 }
 
 void Gui(App* app)
@@ -346,10 +351,14 @@ void Render(App* app)
 
             // Uniform parameters
             glUniformMatrix4(texturedMeshProgram.handle, "uViewProjectMatrix", app->cam->projViewMatrix);
-
-            for (int i = 0; i < app->models.size(); ++i)
+          
+           
+            for (int i = 0; i < app->entities.size(); ++i)
             {
-                Model& model = app->models[i];
+                Entity entity = app->entities[i];
+                glUniformMatrix4(texturedMeshProgram.handle, "uWorldMatrix", entity.worldMatrix);
+
+                Model& model = app->models[entity.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
 
                 for (u32 i = 0; i < mesh.submeshes.size(); ++i)

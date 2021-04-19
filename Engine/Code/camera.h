@@ -4,7 +4,7 @@
 
 class Camera {
 public:
-	Camera();
+	Camera(float cFov, float near, float far, float aspectRatio);
 
 	void Update();
 
@@ -12,6 +12,8 @@ public:
 
 public:
 	float fov = 60.0;
+	float nearPlane = 0.1;
+	float farPlane = 1000.0f;
 
 	glm::vec3 position;
 	glm::vec3 rotation;

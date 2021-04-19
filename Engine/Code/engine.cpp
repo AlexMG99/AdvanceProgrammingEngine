@@ -266,7 +266,7 @@ void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
 void Init(App* app)
 {
     // Create Camera
-    app->cam = new Camera();
+    app->cam = new Camera(60.0f, 0.1f, 1000.0f, (float)(app->displaySize.x/app->displaySize.y));
 
     // Load Program
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
@@ -298,7 +298,13 @@ void Gui(App* app)
 
     ImGui::DragFloat("Pitch", &app->cam->rotation.x); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
     ImGui::DragFloat("Yaw  ", &app->cam->rotation.y); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
-    ImGui::DragFloat("Roll ", &app->cam->rotation.z);
+    ImGui::DragFloat("Roll ", &app->cam->rotation.z); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("FOV    ", &app->cam->fov); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Near    ", &app->cam->farPlane); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Far    ", &app->cam->nearPlane);
+
+    // Todo apply changes to camera when properties modified
 
     ImGui::Separator();
 

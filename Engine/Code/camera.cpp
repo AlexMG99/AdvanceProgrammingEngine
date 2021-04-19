@@ -2,12 +2,16 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
-Camera::Camera()
+Camera::Camera(float cFov, float near, float far, float aspectRatio)
 {
 	position = glm::vec3(0.0f, 0.0f, 3.0f);
 	rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	fov = cFov;
+	nearPlane = near;
+	farPlane = far;
 
-	projMatrix = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
+
+	projMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 
 }
 

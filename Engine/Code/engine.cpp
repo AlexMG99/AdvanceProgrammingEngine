@@ -268,10 +268,9 @@ void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
 
 void Init(App* app)
 {
-    GLint maxUniformBufferSize, uniformBlockAligment;
-
+    GLint maxUniformBufferSize;
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
-    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &maxUniformBufferSize);
+    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAligment);
 
     glGenBuffers(1, &app->bufferHandle);
     glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
@@ -382,7 +381,7 @@ void Render(App* app)
 
                 for (int i = 0; i < app->entities.size(); ++i)
                 {
-                    bufferHead = Align(bufferHead, sizeof(glm::mat4)); // TODO set the 0 value to an uniformBlockAligment 
+                    bufferHead = Align(bufferHead, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
                     Entity entity = app->entities[i];
 
                     entity.localParamsOffset = bufferHead;

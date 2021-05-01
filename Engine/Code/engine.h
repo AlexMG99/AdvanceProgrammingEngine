@@ -165,6 +165,7 @@ struct App
     Camera* cam;
 
     GLuint bufferHandle;
+    GLint uniformBlockAligment;
 };
 
 void Init(App* app);

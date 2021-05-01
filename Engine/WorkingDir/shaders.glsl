@@ -16,7 +16,7 @@ layout(binding = 1, std140) uniform LocalParams
 {
 	mat4 uWorldMatrix;
 	mat4 uWorlViewProjectionMatrix;
-}
+};
 
 uniform mat4 uObjMatrix;
 //uniform mat4 uWorldMatrix;
@@ -24,14 +24,14 @@ uniform mat4 uObjMatrix;
 
 out vec2 vTexCoord;
 out vec3 vPosition;
-out vec3 vNormal;
+//out vec3 vNormal;
 out vec3 vViewDir;
 
 void main()
 {
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	vNormal		= vec3(uWorldMatrix * vec4(aNormal, 1.0));
+	//vNormal	= vec3(uWorldMatrix * vec4(aNormal, 1.0));
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
 

@@ -382,7 +382,7 @@ void Render(App* app)
 
                 for (int i = 0; i < app->entities.size(); ++i)
                 {
-                    bufferHead = Align(bufferHead, 0); // TODO set the 0 value to an uniformBlockAligment 
+                    bufferHead = Align(bufferHead, sizeof(glm::mat4)); // TODO set the 0 value to an uniformBlockAligment 
                     Entity entity = app->entities[i];
 
                     entity.localParamsOffset = bufferHead;
@@ -395,9 +395,7 @@ void Render(App* app)
 
                     entity.localParamsSize = bufferHead - entity.localParamsOffset;
 
-                    u32 blockOffset = 0;
-                    u32 blockSize = sizeof(glm::mat4) * 2;
-                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, blockOffset, blockSize);
+                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, entity.localParamsOffset, entity.localParamsSize);
 
                     Model& model = app->models[entity.modelIndex];
                     Mesh& mesh = app->meshes[model.meshIdx];

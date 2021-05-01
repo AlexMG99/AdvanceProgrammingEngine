@@ -9,6 +9,9 @@
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include "glm/gtc/type_ptr.hpp"
+#include "Core.h"
+
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 {
@@ -23,7 +26,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     char vertexShaderDefine[] = "#define VERTEX\n";
     char fragmentShaderDefine[] = "#define FRAGMENT\n";
 
-    const GLchar* vertexShaderSource[] = {
+    const char* vertexShaderSource[] = {
         versionString,
         shaderNameDefine,
         vertexShaderDefine,
@@ -265,6 +268,17 @@ void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
 
 void Init(App* app)
 {
+    GLint maxUniformBufferSize, uniformBlockAligment;
+
+    glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
+    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &maxUniformBufferSize);
+
+    glGenBuffers(1, &app->bufferHandle);
+    glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+    glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
     // Create Camera
     app->cam = new Camera(60.0f, 0.1f, 1000.0f, (float)(app->displaySize.x/app->displaySize.y));
 
@@ -281,6 +295,8 @@ void Init(App* app)
     app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0)));
     app->entities.push_back(Entity(vec3(2.0, 0.0, 0.0)));
     app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
+
+
 }
 
 void Gui(App* app)
@@ -339,51 +355,73 @@ void Update(App* app)
     app->cam->Update();
 }
 
+u32 Align(u32 value, u32 alignment)
+{
+    return (value + alignment - 1) & ~(alignment - 1);
+}
+
 void Render(App* app)
 {
     switch (app->mode)
     {
         case Mode_TexturedQuad:
             {
-            // Draw function
-            glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_DEPTH_TEST);
+                // Draw function
+                glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glEnable(GL_DEPTH_TEST);
 
-            glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+                glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-            glUseProgram(texturedMeshProgram.handle);
-
-            // Uniform parameters
-            glUniformMatrix4(texturedMeshProgram.handle, "uViewProjectMatrix", app->cam->projViewMatrix);
+                Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+                glUseProgram(texturedMeshProgram.handle);
           
-           
-            for (int i = 0; i < app->entities.size(); ++i)
-            {
-                Entity entity = app->entities[i];
-                glUniformMatrix4(texturedMeshProgram.handle, "uWorldMatrix", entity.worldMatrix);
+                glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+                u32 bufferHead = 0;
+                u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 
-                Model& model = app->models[entity.modelIndex];
-                Mesh& mesh = app->meshes[model.meshIdx];
-
-                for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+                for (int i = 0; i < app->entities.size(); ++i)
                 {
-                    GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-                    glBindVertexArray(vao);
+                    bufferHead = Align(bufferHead, 0); // TODO set the 0 value to an uniformBlockAligment 
+                    Entity entity = app->entities[i];
 
-                    u32 submeshMaterialIdx = model.materialIdx[i];
-                    Material& submeshMaterial = app->materials[submeshMaterialIdx];
+                    entity.localParamsOffset = bufferHead;
 
-                    glUniform1i(app->textureMeshProgram_uTexture, 0);
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+                    memcpy(bufferData + bufferHead, glm::value_ptr(entity.worldMatrix), sizeof(glm::mat4));
+                    bufferHead += sizeof(glm::mat4);
 
-                    Submesh& submesh = mesh.submeshes[i];
-                    glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+                    memcpy(bufferData + bufferHead, glm::value_ptr(app->cam->projViewMatrix * entity.worldMatrix), sizeof(glm::mat4));
+                    bufferHead += sizeof(glm::mat4);
+
+                    entity.localParamsSize = bufferHead - entity.localParamsOffset;
+
+                    u32 blockOffset = 0;
+                    u32 blockSize = sizeof(glm::mat4) * 2;
+                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, blockOffset, blockSize);
+
+                    Model& model = app->models[entity.modelIndex];
+                    Mesh& mesh = app->meshes[model.meshIdx];
+
+                    for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+                    {
+                        GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
+                        glBindVertexArray(vao);
+
+                        u32 submeshMaterialIdx = model.materialIdx[i];
+                        Material& submeshMaterial = app->materials[submeshMaterialIdx];
+
+                        glUniform1i(app->textureMeshProgram_uTexture, 0);
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+
+                        Submesh& submesh = mesh.submeshes[i];
+                        glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+                    }
                 }
-            }
 
+
+                glUnmapBuffer(GL_UNIFORM_BUFFER);
+                glBindBuffer(GL_UNIFORM_BUFFER, 0);
             }
             break;
 

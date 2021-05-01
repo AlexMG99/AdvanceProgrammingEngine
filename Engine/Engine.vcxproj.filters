@@ -430,6 +430,7 @@
     <ClInclude Include="ThirdParty\glm\include\glm\vector_relational.hpp" />
     <ClInclude Include="ThirdParty\stb\stb_image_write.h" />
     <ClInclude Include="Code\Entity.h" />
+    <ClInclude Include="Code\Core.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">

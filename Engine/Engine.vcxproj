@@ -39,6 +39,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="Code\assimp_model_loading.h" />
     <ClInclude Include="Code\camera.h" />
+    <ClInclude Include="Code\Core.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\Entity.h" />
     <ClInclude Include="Code\platform.h" />

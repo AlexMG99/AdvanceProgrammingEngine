@@ -164,6 +164,7 @@ struct App
     // Camera
     Camera* cam;
 
+    GLuint bufferHandle;
 };
 
 void Init(App* app);

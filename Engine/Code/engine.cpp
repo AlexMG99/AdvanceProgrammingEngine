@@ -325,6 +325,21 @@ void Gui(App* app)
     ImGui::DragFloat("Near    ", &app->cam->farPlane); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
     ImGui::DragFloat("Far    ", &app->cam->nearPlane);
 
+    ImGui::Separator();
+
+    // Lights
+    ImGui::Text("Directional Light"); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("Dir X    ", &app->lights[0].direction.x, 0.05); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Dir Y    ", &app->lights[0].direction.y, 0.05); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Dir Z    ", &app->lights[0].direction.z, 0.05); ImGui::SetNextItemWidth(100);
+
+    ImGui::Text("Color: "); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("R    ", &app->lights[0].color.x, 0.01, 0, 1.0); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("G    ", &app->lights[0].color.y, 0.01, 0, 1.0); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("B    ", &app->lights[0].color.z, 0.01, 0, 1.0); ImGui::SetNextItemWidth(100);
+
     // Todo apply changes to camera when properties modified
 
     ImGui::Separator();
@@ -349,6 +364,7 @@ void Gui(App* app)
         }
         ImGui::Text(openGL.c_str());
     }
+
 
 
     ImGui::End();

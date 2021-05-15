@@ -396,3 +396,5 @@
 	typedef int32x4_t			glm_i32vec4;
 	typedef uint32x4_t			glm_u32vec4;
 #endif
+
+

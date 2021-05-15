@@ -351,6 +351,21 @@ void Gui(App* app)
 void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
+    // Camera Input
+    if (app->input.IsKeyPressed(K_A))
+        app->cam->position += app->cameraSpeed * app->deltaTime * app->cam->right;
+    else if (app->input.IsKeyPressed(K_D))
+        app->cam->position -= app->cameraSpeed * app->deltaTime * app->cam->right;
+    else if (app->input.IsKeyPressed(K_W))
+        app->cam->position.y += app->cameraSpeed * app->deltaTime;
+    else if (app->input.IsKeyPressed(K_S))
+        app->cam->position.y -= app->cameraSpeed * app->deltaTime;
+    else if (app->input.IsKeyPressed(K_X))
+        app->cam->position += app->cameraSpeed * app->deltaTime * app->cam->front;
+    else if (app->input.IsKeyPressed(K_Z))
+        app->cam->position -= app->cameraSpeed * app->deltaTime * app->cam->front;
+
+    // Camera update
     app->cam->Update();
 }
 

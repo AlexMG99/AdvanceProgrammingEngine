@@ -163,6 +163,7 @@ struct App
 
     // Camera
     Camera* cam;
+    int cameraSpeed = 10;
 
     GLuint bufferHandle;
     GLint uniformBlockAligment;

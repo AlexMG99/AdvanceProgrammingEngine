@@ -55,6 +55,12 @@ struct Input {
     glm::vec2   mouseDelta;
     ButtonState mouseButtons[MOUSE_BUTTON_COUNT];
     ButtonState keys[KEY_COUNT];
+
+    bool IsKeyPressed(Key key)
+    {
+        return (keys[key] == BUTTON_PRESSED);
+    }
+
 };
 
 struct String

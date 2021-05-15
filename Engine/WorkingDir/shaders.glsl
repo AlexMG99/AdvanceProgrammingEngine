@@ -51,7 +51,7 @@ void main()
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
 	vNormal		= vec3(uWorldMatrix * vec4(aNormal, 1.0));
-	//vViewDir	= uCameraPosition - vPosition;
+	vViewDir	= normalize(uCameraPosition - vPosition);
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
 
@@ -83,6 +83,12 @@ void main()
     vec3 norm = normalize(vNormal);
     float diff = max(dot(norm, uLight[0].direction), 0.0);
     vec3 diffuse = diff * uLight[0].color;
+
+	// Specular
+	float specularStrength = 0.5;
+	vec3 reflectDir = reflect(-uLight[0].direction, vNormal); 
+	float spec = pow(max(dot(vViewDir, reflectDir), 0.0), 32);
+	vec3 specular = specularStrength * spec * uLight[0].color;
         
     vec3 result = (ambient + diffuse) * texture(uTexture, vTexCoord).xyz;
 

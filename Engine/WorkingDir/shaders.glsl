@@ -15,7 +15,7 @@ struct Light
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
 layout(location=0) in vec3 aPosition;
-//layout(location=1) in vec3 aNormal;
+layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
@@ -39,14 +39,18 @@ uniform mat4 uObjMatrix;
 
 out vec2 vTexCoord;
 out vec3 vPosition;
-//out vec3 vNormal;
+out vec3 vNormal;
 out vec3 vViewDir;
+
+float AMBIENT_FACTOR = 0.2;
+float SPECULAR_FACTOR = 0.1;
+float DIFFUSE_FACTOR = 0.7;
 
 void main()
 {
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	//vNormal	= vec3(uWorldMatrix * vec4(aNormal, 1.0));
+	vNormal		= vec3(uWorldMatrix * vec4(aNormal, 1.0));
 	//vViewDir	= uCameraPosition - vPosition;
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
@@ -60,11 +64,29 @@ in vec3 vViewDir;
 
 uniform sampler2D uTexture;
 
+layout(binding = 0, std140) uniform GlobalParams
+{
+	vec3			uCameraPosition;
+	unsigned int	uLightCount;
+	Light			uLight[16];
+};
+
 layout(location = 0) out vec4 oColor;
 
 void main()
 {
-	oColor = texture(uTexture, vTexCoord);
+	// Ambient
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * uLight[0].color;
+  	
+    // Diffuse 
+    vec3 norm = normalize(vNormal);
+    float diff = max(dot(norm, uLight[0].direction), 0.0);
+    vec3 diffuse = diff * uLight[0].color;
+        
+    vec3 result = (ambient + diffuse) * texture(uTexture, vTexCoord).xyz;
+
+	oColor = vec4(result, 1.0);
 }
 
 #endif

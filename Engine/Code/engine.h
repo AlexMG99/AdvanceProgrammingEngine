@@ -27,7 +27,7 @@ struct Buffer {
     void*   data;
 };
 
-enum LighType
+enum LightType
 {
     LightType_Directional,
     LightType_Point
@@ -35,7 +35,14 @@ enum LighType
 
 struct Light
 {
-    LighType type;
+    Light(LightType t, vec3 c, vec3 d, vec3 p)
+    {
+        type = t;
+        color = c;
+        direction = d;
+        position = p;
+    };
+    LightType type;
     vec3 color;
     vec3 direction;
     vec3 position;

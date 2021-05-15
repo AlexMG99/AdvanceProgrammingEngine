@@ -297,6 +297,11 @@ void Init(App* app)
     app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
 
 
+    // Create Light
+    Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
+    app->lights.push_back(light);
+
+
 }
 
 void Gui(App* app)
@@ -392,10 +397,9 @@ void Render(App* app)
 
 
                 // GlobalParams
-                /*app->globalParamsOffset = app->cbuffer.head;
+                app->globalParamsOffset = app->cbuffer.head;
 
                 PushVec3(app->cbuffer, app->cam->position);
-
                 PushUInt(app->cbuffer, app->lights.size());
 
                 for (u32 i = 0; i < app->lights.size(); ++i)
@@ -404,13 +408,15 @@ void Render(App* app)
 
                     Light& light = app->lights[i];
                     PushUInt(app->cbuffer, light.type);
-                    PushVec3(app->cbuffer, light.color);
-                    PushVec3(app->cbuffer, light.direction);
+                    PushVec3(app->cbuffer, normalize(light.color));
+                    PushVec3(app->cbuffer, normalize(light.direction));
                     PushVec3(app->cbuffer, light.position);
 
                 }
 
-                app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;*/
+                app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;
+
+                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
                 // Local Params
                 for (int i = 0; i < app->entities.size(); ++i)
@@ -446,7 +452,6 @@ void Render(App* app)
                         glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
                     }
                 }
-
 
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);

@@ -6,6 +6,7 @@
 
 #include "platform.h"
 #include <glad/glad.h>
+#include <vector>
 #include "assimp_model_loading.h"
 #include "Program.h"
 #include "camera.h"
@@ -17,6 +18,28 @@ typedef glm::vec4  vec4;
 typedef glm::ivec2 ivec2;
 typedef glm::ivec3 ivec3;
 typedef glm::ivec4 ivec4;
+
+struct Buffer {
+    GLuint  handle;
+    GLenum  type;
+    u32     size;
+    u32     head;
+    void*   data;
+};
+
+enum LighType
+{
+    LightType_Directional,
+    LightType_Point
+};
+
+struct Light
+{
+    LighType type;
+    vec3 color;
+    vec3 direction;
+    vec3 position;
+};
 
 struct Image
 {
@@ -165,8 +188,15 @@ struct App
     Camera* cam;
     int cameraSpeed = 10;
 
-    GLuint bufferHandle;
+    // Buffer
+    Buffer cbuffer;
+
+    u32     globalParamsOffset;
+    u32     globalParamsSize;
+
     GLint uniformBlockAligment;
+
+    std::vector<Light> lights;
 };
 
 void Init(App* app);

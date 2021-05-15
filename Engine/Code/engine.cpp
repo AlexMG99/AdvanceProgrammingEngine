@@ -10,6 +10,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include "glm/gtc/type_ptr.hpp"
+#include "buffer_management.h"
 #include "Core.h"
 
 
@@ -272,8 +273,8 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAligment);
 
-    glGenBuffers(1, &app->bufferHandle);
-    glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+    glGenBuffers(1, &app->cbuffer.handle);
+    glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
     glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -369,11 +370,6 @@ void Update(App* app)
     app->cam->Update();
 }
 
-u32 Align(u32 value, u32 alignment)
-{
-    return (value + alignment - 1) & ~(alignment - 1);
-}
-
 void Render(App* app)
 {
     switch (app->mode)
@@ -390,26 +386,46 @@ void Render(App* app)
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
                 glUseProgram(texturedMeshProgram.handle);
           
-                glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
-                u32 bufferHead = 0;
-                u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+                glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
+                app->cbuffer.head = 0;
+                app->cbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 
+
+                // GlobalParams
+                /*app->globalParamsOffset = app->cbuffer.head;
+
+                PushVec3(app->cbuffer, app->cam->position);
+
+                PushUInt(app->cbuffer, app->lights.size());
+
+                for (u32 i = 0; i < app->lights.size(); ++i)
+                {
+                    AlignHead(app->cbuffer, sizeof(vec4));
+
+                    Light& light = app->lights[i];
+                    PushUInt(app->cbuffer, light.type);
+                    PushVec3(app->cbuffer, light.color);
+                    PushVec3(app->cbuffer, light.direction);
+                    PushVec3(app->cbuffer, light.position);
+
+                }
+
+                app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;*/
+
+                // Local Params
                 for (int i = 0; i < app->entities.size(); ++i)
                 {
-                    bufferHead = Align(bufferHead, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
-                    Entity entity = app->entities[i];
+                    AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
+                    Entity& entity = app->entities[i];
+                    glm::mat4    world = entity.worldMatrix;
+                    glm::mat4    worldViewProjection = app->cam->projViewMatrix * entity.worldMatrix;
 
-                    entity.localParamsOffset = bufferHead;
+                    entity.localParamsOffset = app->cbuffer.head;
+                    PushMat4(app->cbuffer, world);
+                    PushMat4(app->cbuffer, worldViewProjection);
+                    entity.localParamsSize = app->cbuffer.head - entity.localParamsOffset;
 
-                    memcpy(bufferData + bufferHead, glm::value_ptr(entity.worldMatrix), sizeof(glm::mat4));
-                    bufferHead += sizeof(glm::mat4);
-
-                    memcpy(bufferData + bufferHead, glm::value_ptr(app->cam->projViewMatrix * entity.worldMatrix), sizeof(glm::mat4));
-                    bufferHead += sizeof(glm::mat4);
-
-                    entity.localParamsSize = bufferHead - entity.localParamsOffset;
-
-                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, entity.localParamsOffset, entity.localParamsSize);
+                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, entity.localParamsOffset, entity.localParamsSize);
 
                     Model& model = app->models[entity.modelIndex];
                     Mesh& mesh = app->meshes[model.meshIdx];

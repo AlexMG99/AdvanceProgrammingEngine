@@ -226,23 +226,25 @@ void Init(App* app)
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
-    LoadModel(app, "Patrick/Patrick.obj");
-    app->quadModel = LoadModel(app, "Models/plane.obj");
+    u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
+    u32 planeID = LoadModel(app, "Plane/plane.obj");
     app->quadMesh = CreatePlane(app);
 
     app->mode = Mode_TexturedQuad;
 
     //Entities =====
     Entity entity;
-    app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0)));
+    app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
 
-    entity = Entity(vec3(4.0, 0.0, 3.0));
+    entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
     entity.Rotate(0, -30, 0);
     app->entities.push_back(entity);
 
-    entity = Entity(vec3(-4.0, 0.0, 3.0));
+    entity = Entity(vec3(-4.0, 0.0, 3.0), patrickID);
     entity.Rotate(0, 30, 0);
     app->entities.push_back(entity);
+
+    app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
 
     InitGBuffer(app);
 

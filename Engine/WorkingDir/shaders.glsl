@@ -40,6 +40,7 @@ uniform mat4 uObjMatrix;
 out vec2 vTexCoord;
 out vec3 vPosition;
 out vec3 vNormal;
+out vec3 mNormal;
 out vec3 vViewDir;
 
 float AMBIENT_FACTOR = 0.2;
@@ -51,7 +52,9 @@ void main()
 
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	vNormal		= vec3(uWorldMatrix * vec4(aNormal, 1.0));
+	vNormal		= mat3(transpose(inverse(uWorldMatrix))) * aNormal;
+	//vNormal		= vec3(uWorldMatrix * vec4(aNormal, 1.0));
+	mNormal = vNormal;
 	vViewDir	= normalize(uCameraPosition - vPosition);
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
@@ -64,6 +67,7 @@ in vec2 vTexCoord;
 in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vViewDir;
+in vec3 mNormal;
 
 uniform sampler2D uTexture;
 
@@ -97,7 +101,7 @@ void main()
 
 	//oColor = vec4(result, 1.0);
 	gDifusse = vec4(result, 1.0);
-	gNormal = vec4(vNormal,1.0);
+	gNormal = vec4(mNormal,1.0);
 }
 
 #endif

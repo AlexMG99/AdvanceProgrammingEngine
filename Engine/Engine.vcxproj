@@ -24,6 +24,7 @@
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\Entity.cpp" />
     <ClCompile Include="Code\platform.cpp" />
+    <ClCompile Include="Code\Program.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
     <ClCompile Include="ThirdParty\glm\include\glm\detail\glm.cpp" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp" />
@@ -525,6 +526,7 @@
     <None Include="ThirdParty\glm\include\glm\gtx\vector_angle.inl" />
     <None Include="ThirdParty\glm\include\glm\gtx\vector_query.inl" />
     <None Include="ThirdParty\glm\include\glm\gtx\wrap.inl" />
+    <None Include="WorkingDir\deferred.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

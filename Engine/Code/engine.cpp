@@ -12,124 +12,6 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Core.h"
 
-
-GLuint CreateProgramFromSource(String programSource, const char* shaderName)
-{
-    GLchar  infoLogBuffer[1024] = {};
-    GLsizei infoLogBufferSize = sizeof(infoLogBuffer);
-    GLsizei infoLogSize;
-    GLint   success;
-
-    char versionString[] = "#version 430\n";
-    char shaderNameDefine[128];
-    sprintf(shaderNameDefine, "#define %s\n", shaderName);
-    char vertexShaderDefine[] = "#define VERTEX\n";
-    char fragmentShaderDefine[] = "#define FRAGMENT\n";
-
-    const char* vertexShaderSource[] = {
-        versionString,
-        shaderNameDefine,
-        vertexShaderDefine,
-        programSource.str
-    };
-    const GLint vertexShaderLengths[] = {
-        (GLint) strlen(versionString),
-        (GLint) strlen(shaderNameDefine),
-        (GLint) strlen(vertexShaderDefine),
-        (GLint) programSource.len
-    };
-    const GLchar* fragmentShaderSource[] = {
-        versionString,
-        shaderNameDefine,
-        fragmentShaderDefine,
-        programSource.str
-    };
-    const GLint fragmentShaderLengths[] = {
-        (GLint) strlen(versionString),
-        (GLint) strlen(shaderNameDefine),
-        (GLint) strlen(fragmentShaderDefine),
-        (GLint) programSource.len
-    };
-
-    GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vshader, ARRAY_COUNT(vertexShaderSource), vertexShaderSource, vertexShaderLengths);
-    glCompileShader(vshader);
-    glGetShaderiv(vshader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-    }
-
-    GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fshader, ARRAY_COUNT(fragmentShaderSource), fragmentShaderSource, fragmentShaderLengths);
-    glCompileShader(fshader);
-    glGetShaderiv(fshader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-    }
-
-    GLuint programHandle = glCreateProgram();
-    glAttachShader(programHandle, vshader);
-    glAttachShader(programHandle, fshader);
-    glLinkProgram(programHandle);
-    glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-        ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-    }
-
-    glUseProgram(0);
-
-    glDetachShader(programHandle, vshader);
-    glDetachShader(programHandle, fshader);
-    glDeleteShader(vshader);
-    glDeleteShader(fshader);
-
-    return programHandle;
-}
-
-u32 LoadProgram(App* app, const char* filepath, const char* programName)
-{
-    String programSource = ReadTextFile(filepath);
-
-    Program program = {};
-    program.handle = CreateProgramFromSource(programSource, programName);
-    program.filepath = filepath;
-    program.programName = programName;
-    program.lastWriteTimestamp = GetFileLastWriteTimestamp(filepath);
-
-    GLint attributeCount;
-    glGetProgramiv(program.handle, GL_ACTIVE_ATTRIBUTES, &attributeCount);
-    for (GLint i = 0; i < attributeCount; i++)
-    {
-        VertexShaderAttribute attribute;
-        char attributeName[255];
-        GLsizei attributeNameLenght;
-        GLint attributeSize;
-        GLenum attributeType;
-
-        glGetActiveAttrib(program.handle, i,
-            ARRAY_COUNT(attributeName),
-            &attributeNameLenght,
-            &attributeSize,
-            &attributeType,
-            attributeName);
-
-        attribute.name = attributeName;
-        attribute.componentCount = (u8)attributeSize;
-        attribute.location =  glGetAttribLocation(program.handle, attributeName);
-
-        program.vertexInputLayout.attributes.push_back(attribute);
-    }
-    app->programs.push_back(program);
-
-    return app->programs.size() - 1;
-}
-
 Image LoadImage(const char* filename)
 {
     Image img = {};
@@ -205,6 +87,58 @@ u32 LoadTexture2D(App* app, const char* filepath)
     }
 }
 
+void InitGBuffer(App* app)
+{
+    //Create gBuffer ==
+    glGenFramebuffers(1, &app->gBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->gBuffer);
+    glEnable(GL_DEPTH_TEST);
+    
+    glGenTextures(1, &app->gDiffuse);
+    glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, app->gDiffuse, 0);
+
+    glGenTextures(1, &app->gNormals);
+    glBindTexture(GL_TEXTURE_2D, app->gNormals);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, app->gNormals, 0);
+
+    glGenTextures(1, &app->gDepth);
+    glBindTexture(GL_TEXTURE_2D, app->gDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, app->gDepth, 0);
+
+    GLenum gBufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (gBufferStatus != GL_FRAMEBUFFER_COMPLETE)
+    {
+        //TODO put log
+    }
+
+    // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    app->lightingPassProgram = LoadProgram(app, "deferred.glsl", "TEXTURED_GEOMETRY");
+
+    Program& geometryProgram = app->programs[app->lightingPassProgram];
+    geometryProgram.Bind();
+    geometryProgram.glUniformInt("gDiffuse", 0);
+    geometryProgram.glUniformInt("gNormal", 1);
+    geometryProgram.glUniformInt("gDepth", 2);
+}
+
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 {
     Submesh& submesh = mesh.submeshes[submeshIndex];
@@ -259,13 +193,6 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 
 }
 
-void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
-{
-    GLuint MatrixID = glGetUniformLocation(programID, name);
-
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mat4));
-}
-
 void Init(App* app)
 {
     GLint maxUniformBufferSize;
@@ -287,6 +214,8 @@ void Init(App* app)
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
     LoadModel(app, "Patrick/Patrick.obj");
+    app->quadModel = LoadModel(app, "Models/plane.obj");
+    app->quadMesh = CreatePlane(app);
 
     app->mode = Mode_TexturedQuad;
 
@@ -295,7 +224,7 @@ void Init(App* app)
     app->entities.push_back(Entity(vec3(2.0, 0.0, 0.0)));
     app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
 
-
+    InitGBuffer(app);
 }
 
 void Gui(App* app)
@@ -321,7 +250,11 @@ void Gui(App* app)
 
     // Todo apply changes to camera when properties modified
 
+    const char* items[] = { "Final", "Normal", "Depth"};
+    ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
+
     ImGui::Separator();
+
 
     if (ImGui::CollapsingHeader("OpenGL Info"))
     {
@@ -380,6 +313,7 @@ void Render(App* app)
     {
         case Mode_TexturedQuad:
             {
+                glBindFramebuffer(GL_FRAMEBUFFER, app->gBuffer);
                 // Draw function
                 glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -431,12 +365,83 @@ void Render(App* app)
                     }
                 }
 
-
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                // Draw in the screen ===
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                Program& lightingProgram = app->programs[app->lightingPassProgram];
+                glUseProgram(lightingProgram.handle);
+
+                lightingProgram.glUniformInt("renderMode", app->renderMode);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
+
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, app->gNormals);
+
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, app->gDepth);
+
+                Model& modelQuad = app->models[app->quadMesh];
+                Mesh& meshQuad = app->meshes[modelQuad.meshIdx];
+                for (u32 i = 0; i < meshQuad.submeshes.size(); ++i)
+                {
+                    GLuint vao = FindVAO(meshQuad, i, texturedMeshProgram);
+                    glBindVertexArray(vao);
+
+                    Submesh& submeshQuad = meshQuad.submeshes[0];
+                    glDrawElements(GL_TRIANGLES, submeshQuad.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submeshQuad.indexOffset);
+                }
             }
             break;
 
-        default:;
+        default:
+            
+            break;
     }
+}
+
+void Mesh::SetupBuffers()
+{
+    u32 vertexBufferSize = 0;
+    u32 indexBufferSize = 0;
+
+    for (u32 i = 0; i < submeshes.size(); ++i)
+    {
+        vertexBufferSize += submeshes[i].vertices.size() * sizeof(float);
+        indexBufferSize += submeshes[i].indices.size() * sizeof(u32);
+    }
+
+    glGenBuffers(1, &vertexBufferHandle);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferHandle);
+    glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, NULL, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &indexBufferHandle);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferHandle);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, NULL, GL_STATIC_DRAW);
+
+    u32 indicesOffset = 0;
+    u32 verticesOffset = 0;
+
+    for (u32 i = 0; i < submeshes.size(); ++i)
+    {
+        const void* verticesData = submeshes[i].vertices.data();
+        const u32   verticesSize = submeshes[i].vertices.size() * sizeof(float);
+        glBufferSubData(GL_ARRAY_BUFFER, verticesOffset, verticesSize, verticesData);
+        submeshes[i].vertexOffset = verticesOffset;
+        verticesOffset += verticesSize;
+
+        const void* indicesData = submeshes[i].indices.data();
+        const u32   indicesSize = submeshes[i].indices.size() * sizeof(u32);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, indicesOffset, indicesSize, indicesData);
+        submeshes[i].indexOffset = indicesOffset;
+        indicesOffset += indicesSize;
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

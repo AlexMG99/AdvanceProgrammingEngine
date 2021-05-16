@@ -77,6 +77,8 @@ struct Mesh
     std::vector<Submesh> submeshes;
     GLuint vertexBufferHandle;
     GLuint indexBufferHandle;
+
+    void SetupBuffers();
 };
 
 struct Material
@@ -143,6 +145,9 @@ struct App
     u32 normalTexIdx;
     u32 magentaTexIdx;
 
+    //mesh 
+    u32 quadMesh;
+    u32 quadModel;
     // Mode
     Mode mode;
 
@@ -153,6 +158,7 @@ struct App
 
     // Location of the texture uniform in the textured quad shader
     GLuint programUniformTexture;
+    GLuint lightingPassProgram;
     GLuint textureMeshProgram_uTexture;
 
     // VAO object to link our screen filling quad with our textured quad shader
@@ -167,6 +173,10 @@ struct App
 
     GLuint bufferHandle;
     GLint uniformBlockAligment;
+    unsigned int gBuffer;
+    u32 gDiffuse, gDepth, gNormals;
+
+    int renderMode = 0;
 };
 
 void Init(App* app);
@@ -179,3 +189,4 @@ void Render(App* app);
 
 u32 LoadTexture2D(App* app, const char* filepath);
 
+void InitGBuffer(App* app);

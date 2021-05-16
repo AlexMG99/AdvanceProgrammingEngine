@@ -5,5 +5,5 @@ typedef unsigned int           u32;
 
 u32 LoadModel(App* app, const char* filename);
 
-
+u32 CreatePlane(App* app);
 

@@ -57,6 +57,7 @@
     <ClCompile Include="Code\camera.cpp" />
     <ClCompile Include="ThirdParty\glm\include\glm\detail\glm.cpp" />
     <ClCompile Include="Code\Entity.cpp" />
+    <ClCompile Include="Code\Program.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -579,5 +580,6 @@
     <None Include="ThirdParty\glm\include\glm\gtx\vector_angle.inl" />
     <None Include="ThirdParty\glm\include\glm\gtx\vector_query.inl" />
     <None Include="ThirdParty\glm\include\glm\gtx\wrap.inl" />
+    <None Include="WorkingDir\deferred.glsl" />
   </ItemGroup>
 </Project>

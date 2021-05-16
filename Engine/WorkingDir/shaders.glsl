@@ -7,7 +7,7 @@
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
 layout(location=0) in vec3 aPosition;
-//layout(location=1) in vec3 aNormal;
+layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
@@ -24,18 +24,21 @@ uniform mat4 uObjMatrix;
 
 out vec2 vTexCoord;
 out vec3 vPosition;
-//out vec3 vNormal;
+out vec3 vNormal;
 out vec3 vViewDir;
 
 void main()
 {
+
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	//vNormal	= vec3(uWorldMatrix * vec4(aNormal, 1.0));
+	vNormal	= vec3(uWorldMatrix * vec4(aNormal, 1.0));
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
+layout (location = 0) out vec4 gDifusse;		
+layout (location = 1) out vec4 gNormal;		
 
 in vec2 vTexCoord;
 in vec3 vPosition;
@@ -44,11 +47,12 @@ in vec3 vViewDir;
 
 uniform sampler2D uTexture;
 
-layout(location = 0) out vec4 oColor;
+out vec4 oColor;
 
 void main()
 {
-	oColor = texture(uTexture, vTexCoord);
+	gDifusse = texture(uTexture, vTexCoord);
+	gNormal = vec4(vNormal,1.0);
 }
 
 #endif

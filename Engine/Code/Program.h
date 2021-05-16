@@ -38,4 +38,10 @@ struct Program
 
     VertexBufferLayout vertexBufferLayout;
     VertexShaderLayout vertexInputLayout;
+
+    void Bind();
+    void glUniformInt(const char* name, int value);
 };
+struct App;
+u32 LoadProgram(App* app, const char* filepath, const char* programName);
+void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4);

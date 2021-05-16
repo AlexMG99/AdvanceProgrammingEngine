@@ -58,6 +58,7 @@
     <ClCompile Include="ThirdParty\glm\include\glm\detail\glm.cpp" />
     <ClCompile Include="Code\Entity.cpp" />
     <ClCompile Include="Code\Program.cpp" />
+    <ClCompile Include="Code\buffer_management.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -432,6 +433,7 @@
     <ClInclude Include="ThirdParty\stb\stb_image_write.h" />
     <ClInclude Include="Code\Entity.h" />
     <ClInclude Include="Code\Core.h" />
+    <ClInclude Include="Code\buffer_management.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">

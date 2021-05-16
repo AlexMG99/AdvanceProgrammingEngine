@@ -10,6 +10,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include "glm/gtc/type_ptr.hpp"
+#include "buffer_management.h"
 #include "Core.h"
 
 Image LoadImage(const char* filename)
@@ -199,8 +200,8 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAligment);
 
-    glGenBuffers(1, &app->bufferHandle);
-    glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+    glGenBuffers(1, &app->cbuffer.handle);
+    glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
     glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -225,6 +226,12 @@ void Init(App* app)
     app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
 
     InitGBuffer(app);
+
+    // Create Light
+    Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
+    app->lights.push_back(light);
+
+
 }
 
 void Gui(App* app)
@@ -247,6 +254,21 @@ void Gui(App* app)
     ImGui::DragFloat("FOV    ", &app->cam->fov); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
     ImGui::DragFloat("Near    ", &app->cam->farPlane); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
     ImGui::DragFloat("Far    ", &app->cam->nearPlane);
+
+    ImGui::Separator();
+
+    // Lights
+    ImGui::Text("Directional Light"); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("Dir X    ", &app->lights[0].direction.x, 0.05); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Dir Y    ", &app->lights[0].direction.y, 0.05); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Dir Z    ", &app->lights[0].direction.z, 0.05); ImGui::SetNextItemWidth(100);
+
+    ImGui::Text("Color: "); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("R    ", &app->lights[0].color.x, 0.01, 0, 1.0); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("G    ", &app->lights[0].color.y, 0.01, 0, 1.0); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("B    ", &app->lights[0].color.z, 0.01, 0, 1.0); ImGui::SetNextItemWidth(100);
 
     // Todo apply changes to camera when properties modified
 
@@ -278,6 +300,7 @@ void Gui(App* app)
     }
 
 
+
     ImGui::End();
 }
 
@@ -302,11 +325,6 @@ void Update(App* app)
     app->cam->Update();
 }
 
-u32 Align(u32 value, u32 alignment)
-{
-    return (value + alignment - 1) & ~(alignment - 1);
-}
-
 void Render(App* app)
 {
     switch (app->mode)
@@ -324,26 +342,47 @@ void Render(App* app)
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
                 glUseProgram(texturedMeshProgram.handle);
           
-                glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
-                u32 bufferHead = 0;
-                u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+                glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
+                app->cbuffer.head = 0;
+                app->cbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 
+
+                // GlobalParams
+                app->globalParamsOffset = app->cbuffer.head;
+
+                PushVec3(app->cbuffer, app->cam->position);
+                PushUInt(app->cbuffer, app->lights.size());
+
+                for (u32 i = 0; i < app->lights.size(); ++i)
+                {
+                    AlignHead(app->cbuffer, sizeof(vec4));
+
+                    Light& light = app->lights[i];
+                    PushUInt(app->cbuffer, light.type);
+                    PushVec3(app->cbuffer, normalize(light.color));
+                    PushVec3(app->cbuffer, normalize(light.direction));
+                    PushVec3(app->cbuffer, light.position);
+
+                }
+
+                app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;
+
+                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
+                // Local Params
                 for (int i = 0; i < app->entities.size(); ++i)
                 {
-                    bufferHead = Align(bufferHead, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
-                    Entity entity = app->entities[i];
+                    AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
+                    Entity& entity = app->entities[i];
+                    glm::mat4    world = entity.worldMatrix;
+                    glm::mat4    worldViewProjection = app->cam->projViewMatrix * entity.worldMatrix;
 
-                    entity.localParamsOffset = bufferHead;
+                    entity.localParamsOffset = app->cbuffer.head;
+                    PushMat4(app->cbuffer, world);
+                    PushMat4(app->cbuffer, worldViewProjection);
+                    entity.localParamsSize = app->cbuffer.head - entity.localParamsOffset;
 
-                    memcpy(bufferData + bufferHead, glm::value_ptr(entity.worldMatrix), sizeof(glm::mat4));
-                    bufferHead += sizeof(glm::mat4);
-
-                    memcpy(bufferData + bufferHead, glm::value_ptr(app->cam->projViewMatrix * entity.worldMatrix), sizeof(glm::mat4));
-                    bufferHead += sizeof(glm::mat4);
-
-                    entity.localParamsSize = bufferHead - entity.localParamsOffset;
-
-                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, entity.localParamsOffset, entity.localParamsSize);
+                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, entity.localParamsOffset, entity.localParamsSize);
 
                     Model& model = app->models[entity.modelIndex];
                     Mesh& mesh = app->meshes[model.meshIdx];

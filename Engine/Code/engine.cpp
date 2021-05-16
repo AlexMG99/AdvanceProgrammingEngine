@@ -213,6 +213,10 @@ void Init(App* app)
     glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+    glGenBuffers(1, &app->deferredbuffer.handle);
+    glBindBuffer(GL_UNIFORM_BUFFER, app->deferredbuffer.handle);
+    glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Create Camera
     app->cam = new Camera(60.0f, 0.1f, 1000.0f, (float)(app->displaySize.x/app->displaySize.y));
@@ -362,29 +366,6 @@ void Render(App* app)
                 app->cbuffer.head = 0;
                 app->cbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 
-
-                // GlobalParams
-                app->globalParamsOffset = app->cbuffer.head;
-
-                PushVec3(app->cbuffer, app->cam->position);
-                PushUInt(app->cbuffer, app->lights.size());
-
-                for (u32 i = 0; i < app->lights.size(); ++i)
-                {
-                    AlignHead(app->cbuffer, sizeof(vec4));
-
-                    Light& light = app->lights[i];
-                    PushUInt(app->cbuffer, light.type);
-                    PushVec3(app->cbuffer, normalize(light.color));
-                    PushVec3(app->cbuffer, normalize(light.direction));
-                    PushVec3(app->cbuffer, light.position);
-
-                }
-
-                app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;
-
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-
                 // Local Params
                 for (int i = 0; i < app->entities.size(); ++i)
                 {
@@ -398,7 +379,7 @@ void Render(App* app)
                     PushMat4(app->cbuffer, worldViewProjection);
                     entity.localParamsSize = app->cbuffer.head - entity.localParamsOffset;
 
-                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, entity.localParamsOffset, entity.localParamsSize);
+                    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, entity.localParamsOffset, entity.localParamsSize);
 
                     Model& model = app->models[entity.modelIndex];
                     Mesh& mesh = app->meshes[model.meshIdx];
@@ -419,16 +400,43 @@ void Render(App* app)
                         glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
                     }
                 }
-
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+                // Deferred Shading ======
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 // Draw in the screen ===
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+                
                 Program& lightingProgram = app->programs[app->lightingPassProgram];
                 glUseProgram(lightingProgram.handle);
+                
+                glBindBuffer(GL_UNIFORM_BUFFER, app->deferredbuffer.handle);
+                app->deferredbuffer.head = 0;
+                app->deferredbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+
+                // GlobalParams
+                app->globalParamsOffset = app->deferredbuffer.head;
+
+                PushVec3(app->deferredbuffer, app->cam->position);
+                PushUInt(app->deferredbuffer, app->lights.size());
+
+                for (u32 i = 0; i < app->lights.size(); ++i)
+                {
+                    AlignHead(app->deferredbuffer, sizeof(vec4));
+
+                    Light& light = app->lights[i];
+                    PushUInt(app->deferredbuffer, light.type);
+                    PushVec3(app->deferredbuffer, normalize(light.color));
+                    PushVec3(app->deferredbuffer, normalize(light.direction));
+                    PushVec3(app->deferredbuffer, light.position);
+
+                }
+
+                app->globalParamsSize = app->deferredbuffer.head - app->globalParamsOffset;
+
+                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
 
                 lightingProgram.glUniformInt("renderMode", app->renderMode);
 
@@ -454,6 +462,9 @@ void Render(App* app)
                     Submesh& submeshQuad = meshQuad.submeshes[0];
                     glDrawElements(GL_TRIANGLES, submeshQuad.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submeshQuad.indexOffset);
                 }
+                glUnmapBuffer(GL_UNIFORM_BUFFER);
+                glBindBuffer(GL_UNIFORM_BUFFER, 0);
+                
             }
             break;
 

@@ -203,6 +203,7 @@ struct App
 
     // Buffer
     Buffer cbuffer;
+    Buffer deferredbuffer;
 
     u32     globalParamsOffset;
     u32     globalParamsSize;

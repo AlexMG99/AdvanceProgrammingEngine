@@ -11,6 +11,7 @@ Entity::Entity(glm::vec3 pos, u32 modelIndex)
 	worldMatrix = glm::mat4(1.0);
 	worldMatrix = glm::translate(worldMatrix, pos);
 
+	this->modelIndex = modelIndex;
 }
 
 void Entity::Rotate(float x, float y, float z)

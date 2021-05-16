@@ -228,6 +228,7 @@ void Init(App* app)
 
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");
+    u32 sphereID = LoadModel(app, "Sphere/sphere.obj");
     app->quadMesh = CreatePlane(app);
 
     app->mode = Mode_TexturedQuad;
@@ -251,16 +252,22 @@ void Init(App* app)
     // Create Light
     Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
     app->lights.push_back(light);
+    
 
     light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
     app->lights.push_back(light);
+    entity = Entity(vec3(10, 10, 10), sphereID);
+    app->entities.push_back(entity);
 
     light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
     app->lights.push_back(light);
+    entity = Entity(vec3(3, 2, 3), sphereID);
+    app->entities.push_back(entity);
 
     light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
     app->lights.push_back(light);
-
+    entity = Entity(vec3(-5, 5, 0), sphereID);
+    app->entities.push_back(entity);
 }
 
 void Gui(App* app)

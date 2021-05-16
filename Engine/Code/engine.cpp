@@ -221,9 +221,16 @@ void Init(App* app)
     app->mode = Mode_TexturedQuad;
 
     //Entities =====
+    Entity entity;
     app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0)));
-    app->entities.push_back(Entity(vec3(2.0, 0.0, 0.0)));
-    app->entities.push_back(Entity(vec3(-2.0, 0.0, 0.0)));
+
+    entity = Entity(vec3(4.0, 0.0, 3.0));
+    entity.Rotate(0, -30, 0);
+    app->entities.push_back(entity);
+
+    entity = Entity(vec3(-4.0, 0.0, 3.0));
+    entity.Rotate(0, 30, 0);
+    app->entities.push_back(entity);
 
     InitGBuffer(app);
 

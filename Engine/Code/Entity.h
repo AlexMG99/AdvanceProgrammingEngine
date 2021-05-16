@@ -15,4 +15,6 @@ public:
 	u32 modelIndex = 0;
 	u32 localParamsOffset = 0;
 	u32 localParamsSize = 0;
+
+	void Rotate(float x, float y, float z);
 };

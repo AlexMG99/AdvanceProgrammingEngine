@@ -6,6 +6,8 @@ layout(location=0) in vec3 aPosition;
 layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
 
+
+
 out vec2 vTexCoord;
 
 void main()
@@ -21,6 +23,7 @@ in vec2 vTexCoord;
 uniform sampler2D gDiffuse;
 uniform sampler2D gNormal;
 uniform sampler2D gDepth;
+uniform sampler2D gPosition;
 uniform int renderMode;
 
 float LinearizeDepth(vec2 uv)
@@ -40,11 +43,15 @@ void main()
 	{
 	oColor = texture(gNormal, vTexCoord);
 	}
-	else
+	else if(renderMode ==2)
 	{
 		oColor.xyz = vec3(LinearizeDepth(vTexCoord));
 		//oColor.xyz = normalize(oColor.xyz);
 		oColor.w =1.0;
+	}
+	else
+	{
+		oColor = texture(gPosition, vTexCoord);
 	}
 	//oColor = vec4(1.0,0.0,0.0,1.0);
 }

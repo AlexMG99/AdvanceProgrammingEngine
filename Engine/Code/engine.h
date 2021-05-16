@@ -209,7 +209,7 @@ struct App
 
     GLint uniformBlockAligment;
     unsigned int gBuffer;
-    u32 gDiffuse, gDepth, gNormals;
+    u32 gDiffuse, gDepth, gNormals, gPosition;
 
     int renderMode = 0;
 

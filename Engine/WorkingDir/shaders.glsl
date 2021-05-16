@@ -62,6 +62,7 @@ void main()
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 layout (location = 0) out vec4 gDifusse;		
 layout (location = 1) out vec4 gNormal;		
+layout (location = 2) out vec4 gPosition;		
 
 in vec2 vTexCoord;
 in vec3 vPosition;
@@ -145,6 +146,7 @@ void main()
 
 	gDifusse = vec4(result, 1.0);
 	gNormal = vec4(mNormal,1.0);
+	gPosition = vec4(vPosition,1.0);
 }
 
 #endif

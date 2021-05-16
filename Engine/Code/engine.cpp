@@ -109,6 +109,13 @@ void InitGBuffer(App* app)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, app->gNormals, 0);
 
+    glGenTextures(1, &app->gPosition);
+    glBindTexture(GL_TEXTURE_2D, app->gPosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, app->gPosition, 0);
+
     glGenTextures(1, &app->gDepth);
     glBindTexture(GL_TEXTURE_2D, app->gDepth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -126,8 +133,8 @@ void InitGBuffer(App* app)
     }
 
     // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(2, attachments);
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -138,6 +145,7 @@ void InitGBuffer(App* app)
     geometryProgram.glUniformInt("gDiffuse", 0);
     geometryProgram.glUniformInt("gNormal", 1);
     geometryProgram.glUniformInt("gDepth", 2);
+    geometryProgram.glUniformInt("gPosition", 3);
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
@@ -280,7 +288,7 @@ void Gui(App* app)
 
     // Todo apply changes to camera when properties modified
 
-    const char* items[] = { "Final", "Normal", "Depth"};
+    const char* items[] = { "Final", "Normal", "Depth", "Position"};
     ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
 
     ImGui::Separator();
@@ -432,6 +440,9 @@ void Render(App* app)
 
                 glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, app->gDepth);
+
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, app->gPosition);
 
                 Model& modelQuad = app->models[app->quadMesh];
                 Mesh& meshQuad = app->meshes[modelQuad.meshIdx];

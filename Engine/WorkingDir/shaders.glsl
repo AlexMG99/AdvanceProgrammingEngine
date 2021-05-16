@@ -76,26 +76,69 @@ layout(binding = 0, std140) uniform GlobalParams
 
 //out vec4 oColor;
 
-void main()
+vec3 CalculateDirLight(Light light, vec3 normal, vec3 viewDir)
 {
-	// Ambient
-    float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * uLight[0].color;
-  	
-    // Diffuse 
-    vec3 norm = normalize(vNormal);
-    float diff = max(dot(norm, uLight[0].direction), 0.0);
-    vec3 diffuse = diff * uLight[0].color;
+	vec3 lightDir = normalize(-light.direction);
+
+	// Diffuse
+	float diff = max(dot(normal, lightDir), 0.0);
 
 	// Specular
-	float specularStrength = 0.5;
-	vec3 reflectDir = reflect(-uLight[0].direction, vNormal); 
-	float spec = pow(max(dot(vViewDir, reflectDir), 0.0), 32);
-	vec3 specular = specularStrength * spec * uLight[0].color;
-        
-    vec3 result = (ambient + diffuse) * texture(uTexture, vTexCoord).xyz;
+	vec3 reflectDir = reflect(-lightDir, normal);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
 
-	//oColor = vec4(result, 1.0);
+	// Combine
+	vec3 ambient = 0.1 * vec3(texture(uTexture vTexCoord));
+	vec3 diffuse = diff * vec3(texture(uTexture, vTexCoord));
+	vec3 specular = 0.5 * spec * light.color;
+
+	return (ambient + diffuse + specular);
+}
+
+vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+	float constant = 1.0f;
+	float linear = 0.09;
+	float quadratic = 0.032;
+
+    // Diffuse Shading
+    float diff = max(dot(normal, lightDir), 0.0);
+
+    // Specular Shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+
+    // Attenuation
+    float distance    = length(light.position - fragPos);
+    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
+				 
+    // Combine Results
+    vec3 ambient  = 0.1  * vec3(texture(uTexture, vTexCoord));
+    vec3 diffuse  = diff * vec3(texture(uTexture, vTexCoord));
+    vec3 specular = 0.5 * spec * light.color;
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
+void main()
+{
+	// Properties
+	vec3 norm = normalize(vNormal);
+	vec3 viewDir = normalize(vViewDir - vPosition);
+
+	// Lights
+	vec3 result = vec3(0,0,0);
+	for(int i = 0; i < uLightCount; i++)
+	{
+		if(uLight[i].type == 0)
+			result += CalculateDirLight(uLight[i], norm, viewDir);
+		else
+			result += CalculatePointLight(uLight[i], norm, vPosition, viewDir);
+	}
+
 	gDifusse = vec4(result, 1.0);
 	gNormal = vec4(vNormal,1.0);
 }

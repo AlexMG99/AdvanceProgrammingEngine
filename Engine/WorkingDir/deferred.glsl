@@ -23,6 +23,14 @@ uniform sampler2D gNormal;
 uniform sampler2D gDepth;
 uniform int renderMode;
 
+float LinearizeDepth(vec2 uv)
+{
+  float n = 1.0; // camera z near
+  float f = 100.0; // camera z far
+  float z = texture2D(gDepth, uv).x;
+  return (2.0 * n) / (f + n - z * (f - n));	
+}
+
 void main()
 {	if(renderMode == 0)
 	{
@@ -34,7 +42,8 @@ void main()
 	}
 	else
 	{
-		oColor.xyz = vec3(texture(gDepth, vTexCoord).r);
+		oColor.xyz = vec3(LinearizeDepth(vTexCoord));
+		//oColor.xyz = normalize(oColor.xyz);
 		oColor.w =1.0;
 	}
 	//oColor = vec4(1.0,0.0,0.0,1.0);

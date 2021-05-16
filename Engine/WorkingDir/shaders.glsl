@@ -92,7 +92,7 @@ vec3 CalculateDirLight(Light light, vec3 normal, vec3 viewDir)
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
 
 	// Combine
-	vec3 ambient = 0.1 * vec3(texture(uTexture vTexCoord));
+	vec3 ambient = 0.1 * texture(uTexture, vTexCoord).rgb;
 	vec3 diffuse = diff * vec3(texture(uTexture, vTexCoord));
 	vec3 specular = 0.5 * spec * light.color;
 
@@ -102,7 +102,7 @@ vec3 CalculateDirLight(Light light, vec3 normal, vec3 viewDir)
 vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
-	float constant = 1.0f;
+	float constant = 1.0;
 	float linear = 0.09;
 	float quadratic = 0.032;
 
@@ -118,7 +118,7 @@ vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
 				 
     // Combine Results
-    vec3 ambient  = 0.1  * vec3(texture(uTexture, vTexCoord));
+    vec3 ambient  = 0.1  * texture(uTexture, vTexCoord).rgb;
     vec3 diffuse  = diff * vec3(texture(uTexture, vTexCoord));
     vec3 specular = 0.5 * spec * light.color;
     ambient  *= attenuation;

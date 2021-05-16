@@ -335,17 +335,31 @@ void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
     // Camera Input
+
+    if (app->input.mouseButtons[1] == ButtonState::BUTTON_PRESSED) 
+    {
+       
+        app->cam->rotation.x -= app->input.mouseDelta.y;
+        app->cam->rotation.y += app->input.mouseDelta.x;
+
+        if (app->cam->rotation.x > 89.0f)
+            app->cam->rotation.x = 89.0f;
+        if (app->cam->rotation.x < -89.0f)
+            app->cam->rotation.x = -89.0f;
+
+    }
+
     if (app->input.IsKeyPressed(K_A))
         app->cam->position += app->cameraSpeed * app->deltaTime * app->cam->right;
     else if (app->input.IsKeyPressed(K_D))
         app->cam->position -= app->cameraSpeed * app->deltaTime * app->cam->right;
+    //else if (app->input.IsKeyPressed(K_W))
+    //    app->cam->position.y += app->cameraSpeed * app->deltaTime;
+    //else if (app->input.IsKeyPressed(K_S))
+    //    app->cam->position.y -= app->cameraSpeed * app->deltaTime;
     else if (app->input.IsKeyPressed(K_W))
-        app->cam->position.y += app->cameraSpeed * app->deltaTime;
-    else if (app->input.IsKeyPressed(K_S))
-        app->cam->position.y -= app->cameraSpeed * app->deltaTime;
-    else if (app->input.IsKeyPressed(K_X))
         app->cam->position += app->cameraSpeed * app->deltaTime * app->cam->front;
-    else if (app->input.IsKeyPressed(K_Z))
+    else if (app->input.IsKeyPressed(K_S))
         app->cam->position -= app->cameraSpeed * app->deltaTime * app->cam->front;
 
     // Camera update

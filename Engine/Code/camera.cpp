@@ -4,8 +4,8 @@
 
 Camera::Camera(float cFov, float near, float far, float aspectRatio)
 {
-	position = glm::vec3(0.0f, 0.0f, 3.0f);
-	rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	position = glm::vec3(-17.0f, 17.0f, 14.0f);
+	rotation = glm::vec3(-40.0f, -40.0f, 0.0f);
 	fov = cFov;
 	nearPlane = near;
 	farPlane = far;

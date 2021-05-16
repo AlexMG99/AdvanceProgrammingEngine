@@ -231,6 +231,14 @@ void Init(App* app)
     Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
     app->lights.push_back(light);
 
+    light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
+    app->lights.push_back(light);
+
+    light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
+    app->lights.push_back(light);
+
+    light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
+    app->lights.push_back(light);
 
 }
 

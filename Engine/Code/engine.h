@@ -167,6 +167,7 @@ struct App
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
+    u32 waterProgramIdx;
     
     // texture indices
     u32 diceTexIdx;

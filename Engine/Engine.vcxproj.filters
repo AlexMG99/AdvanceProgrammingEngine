@@ -59,6 +59,7 @@
     <ClCompile Include="Code\Entity.cpp" />
     <ClCompile Include="Code\Program.cpp" />
     <ClCompile Include="Code\buffer_management.cpp" />
+    <ClCompile Include="Code\WaterEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -434,6 +435,7 @@
     <ClInclude Include="Code\Entity.h" />
     <ClInclude Include="Code\Core.h" />
     <ClInclude Include="Code\buffer_management.h" />
+    <ClInclude Include="Code\WaterEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">

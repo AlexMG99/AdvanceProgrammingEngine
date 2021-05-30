@@ -133,7 +133,7 @@ void InitGBuffer(App* app)
     }
 
     // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2 };
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
     glDrawBuffers(3, attachments);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -225,6 +225,9 @@ void Init(App* app)
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
+
+    //Load Water Shader
+    app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
 
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");

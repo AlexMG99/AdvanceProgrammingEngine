@@ -11,6 +11,7 @@
 #include "Program.h"
 #include "camera.h"
 #include "Entity.h"
+#include "Resources/Texture.h"
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -46,20 +47,6 @@ struct Light
     vec3 color;
     vec3 direction;
     vec3 position;
-};
-
-struct Image
-{
-    void* pixels;
-    ivec2 size;
-    i32   nchannels;
-    i32   stride;
-};
-
-struct Texture
-{
-    GLuint      handle;
-    std::string filepath;
 };
 
 

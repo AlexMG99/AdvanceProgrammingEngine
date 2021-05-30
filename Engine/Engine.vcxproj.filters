@@ -434,6 +434,10 @@
     <ClInclude Include="Code\Entity.h" />
     <ClInclude Include="Code\Core.h" />
     <ClInclude Include="Code\buffer_management.h" />
+    <ClInclude Include="Code\Resources\TextureCube.h" />
+    <ClInclude Include="Code\Resources\Texture.h" />
+    <ClInclude Include="Code\Resources\Enviroment.h" />
+    <ClInclude Include="Code\Resources\Component.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">

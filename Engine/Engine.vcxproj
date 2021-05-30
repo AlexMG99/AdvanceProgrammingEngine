@@ -47,6 +47,10 @@
     <ClInclude Include="Code\Entity.h" />
     <ClInclude Include="Code\platform.h" />
     <ClInclude Include="Code\Program.h" />
+    <ClInclude Include="Code\Resources\Component.h" />
+    <ClInclude Include="Code\Resources\Enviroment.h" />
+    <ClInclude Include="Code\Resources\Texture.h" />
+    <ClInclude Include="Code\Resources\TextureCube.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\ai_assert.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\anim.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\camera.h" />

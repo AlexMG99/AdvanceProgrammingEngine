@@ -13,54 +13,8 @@
 #include "buffer_management.h"
 #include "Core.h"
 
-Image LoadImage(const char* filename)
-{
-    Image img = {};
-    stbi_set_flip_vertically_on_load(true);
-    img.pixels = stbi_load(filename, &img.size.x, &img.size.y, &img.nchannels, 0);
-    if (img.pixels)
-    {
-        img.stride = img.size.x * img.nchannels;
-    }
-    else
-    {
-        ELOG("Could not open file %s", filename);
-    }
-    return img;
-}
 
-void FreeImage(Image image)
-{
-    stbi_image_free(image.pixels);
-}
 
-GLuint CreateTexture2DFromImage(Image image)
-{
-    GLenum internalFormat = GL_RGB8;
-    GLenum dataFormat     = GL_RGB;
-    GLenum dataType       = GL_UNSIGNED_BYTE;
-
-    switch (image.nchannels)
-    {
-        case 3: dataFormat = GL_RGB; internalFormat = GL_RGB8; break;
-        case 4: dataFormat = GL_RGBA; internalFormat = GL_RGBA8; break;
-        default: ELOG("LoadTexture2D() - Unsupported number of channels");
-    }
-
-    GLuint texHandle;
-    glGenTextures(1, &texHandle);
-    glBindTexture(GL_TEXTURE_2D, texHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image.size.x, image.size.y, 0, dataFormat, dataType, image.pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return texHandle;
-}
 
 u32 LoadTexture2D(App* app, const char* filepath)
 {
@@ -139,8 +93,10 @@ void InitGBuffer(App* app)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     app->lightingPassProgram = LoadProgram(app, "deferred.glsl", "TEXTURED_GEOMETRY");
-
+    app->skyBoxProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
+    app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
     Program& geometryProgram = app->programs[app->lightingPassProgram];
+   
     geometryProgram.Bind();
     geometryProgram.glUniformInt("gDiffuse", 0);
     geometryProgram.glUniformInt("gNormal", 1);
@@ -232,8 +188,8 @@ void Init(App* app)
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");
     u32 sphereID = LoadModel(app, "Sphere/sphere.obj");
-    app->quadMesh = CreatePlane(app);
-
+    app->quadModel = CreatePlane(app);
+    app->cubeModel =  CreateCube(app);
     app->mode = Mode_TexturedQuad;
 
     //Entities =====
@@ -388,12 +344,25 @@ void Render(App* app)
                 // Draw function
                 glClearColor(0.f, 0.f, 0.f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                Program& skyProgram = app->programs[app->skyBoxProgram];
+                skyProgram.Bind();
+                skyProgram.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
+                skyProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
+                skyProgram.glUniformVec3("localPosition", app->cam->position);
+                skyProgram.glUniformInt("equirectangularMap", 0);
+                Texture& skyTex = app->textures[app->skyTexture];
+                skyTex.Bind(0);
+
+                //Model& cubeModel = app->models[app->cubeModel];
+                //cubeModel.Render(app, skyProgram);
+
                 glEnable(GL_DEPTH_TEST);
 
                 glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-                glUseProgram(texturedMeshProgram.handle);
+                texturedMeshProgram.Bind();
           
                 glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
                 app->cbuffer.head = 0;
@@ -433,6 +402,10 @@ void Render(App* app)
                         glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
                     }
                 }
+                
+                Model& cubeModel = app->models[app->cubeModel];
+                cubeModel.Render(app, texturedMeshProgram);
+
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -485,16 +458,9 @@ void Render(App* app)
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, app->gPosition);
 
-                Model& modelQuad = app->models[app->quadMesh];
-                Mesh& meshQuad = app->meshes[modelQuad.meshIdx];
-                for (u32 i = 0; i < meshQuad.submeshes.size(); ++i)
-                {
-                    GLuint vao = FindVAO(meshQuad, i, texturedMeshProgram);
-                    glBindVertexArray(vao);
-
-                    Submesh& submeshQuad = meshQuad.submeshes[0];
-                    glDrawElements(GL_TRIANGLES, submeshQuad.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submeshQuad.indexOffset);
-                }
+                Model& modelQuad = app->models[app->quadModel];
+                modelQuad.Render(app, texturedMeshProgram);
+               
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
                 
@@ -546,4 +512,18 @@ void Mesh::SetupBuffers()
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Model::Render(App* app, Program& program)
+{
+    Model& modelQuad = app->models[app->quadModel];
+    Mesh& meshQuad = app->meshes[modelQuad.meshIdx];
+    for (u32 i = 0; i < meshQuad.submeshes.size(); ++i)
+    {
+        GLuint vao = FindVAO(meshQuad, i, program);
+        glBindVertexArray(vao);
+
+        Submesh& submeshQuad = meshQuad.submeshes[0];
+        glDrawElements(GL_TRIANGLES, submeshQuad.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submeshQuad.indexOffset);
+    }
 }

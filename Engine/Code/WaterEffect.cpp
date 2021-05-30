@@ -18,8 +18,8 @@ void WaterEffect::createBuffers(App* app)
 	// Create fboRefraction
 	glGenFramebuffers(1, &fboRefraction);
 	glBindFramebuffer(GL_FRAMEBUFFER, fboRefraction);
-	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
-	glDrawBuffers(2, attachments);
+	unsigned int attachments2[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
+	glDrawBuffers(2, attachments2);
 
 	// Assign textures
 	createTextureAttachment(app, rtRefraction, fboRefraction);

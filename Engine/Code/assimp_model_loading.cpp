@@ -255,3 +255,53 @@ u32 CreatePlane(App* app)
 
     return modelIdx;
 }
+
+u32 CreateCube(App* app)
+{
+    app->meshes.push_back(Mesh{});
+    Mesh& mesh = app->meshes.back();
+    u32 meshIdx = (u32)app->meshes.size() - 1u;
+
+    app->models.push_back(Model{});
+    Model& model = app->models.back();
+    model.meshIdx = meshIdx;
+    u32 modelIdx = (u32)app->models.size() - 1u;
+
+    std::vector<float> vertices;
+    std::vector<u32> indices;
+
+	vertices = { -1, -1, -1, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
+				  1, -1, -1, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+				  1,  1, -1, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,
+				 -1,  1, -1, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f,
+				 -1, -1,  1, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
+                  1, -1,  1, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+                  1,  1,  1, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,
+                 -1,  1,  1, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, };
+
+    indices = { 0, 1, 3, 3, 1, 2,
+                1, 5, 2, 2, 5, 6,
+                5, 4, 6, 6, 4, 7,
+                4, 0, 7, 7, 0, 3,
+                3, 2, 7, 7, 2, 6,
+                4, 5, 0, 0, 5, 1 };
+
+    // create the vertex format
+    VertexBufferLayout vertexBufferLayout = {};
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 1, 3, 3 * sizeof(float) });
+    vertexBufferLayout.stride = 6 * sizeof(float);
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride });
+    vertexBufferLayout.stride += 2 * sizeof(float);
+
+    // add the submesh into the mesh
+    Submesh submesh = {};
+    submesh.vertexBufferLayout = vertexBufferLayout;
+    submesh.vertices.swap(vertices);
+    submesh.indices.swap(indices);
+    mesh.submeshes.push_back(submesh);
+
+    mesh.SetupBuffers();
+
+    return modelIdx;
+}

@@ -116,13 +116,6 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
     return app->programs.size() - 1;
 }
 
-void glUniformMatrix4(u32 programID, const char* name, glm::mat4 mat4)
-{
-    GLuint MatrixID = glGetUniformLocation(programID, name);
-
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mat4));
-}
-
 void Program::Bind()
 {
     glUseProgram(handle);
@@ -132,6 +125,18 @@ void Program::glUniformInt(const char* name, int value)
 {
     GLuint MatrixID = glGetUniformLocation(handle, name);
     glUniform1i(MatrixID, value);
+}
+
+void Program::glUniformMatrix4(const char* name, glm::mat4 mat4)
+{
+    GLuint MatrixID = glGetUniformLocation(handle, name);
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mat4));
+}
+
+void Program::glUniformVec3(const char* name, glm::vec3 vec)
+{
+    GLuint location = glGetUniformLocation(handle, name);
+    glUniform3f(location,vec.x, vec.y, vec.z);
 }
 
 

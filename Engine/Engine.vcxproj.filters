@@ -60,6 +60,7 @@
     <ClCompile Include="Code\Program.cpp" />
     <ClCompile Include="Code\buffer_management.cpp" />
     <ClCompile Include="Code\Resources\Texture.cpp" />
+    <ClCompile Include="Code\WaterEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -439,6 +440,7 @@
     <ClInclude Include="Code\Resources\Texture.h" />
     <ClInclude Include="Code\Resources\Enviroment.h" />
     <ClInclude Include="Code\Resources\Component.h" />
+    <ClInclude Include="Code\WaterEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">
@@ -588,5 +590,6 @@
     <None Include="ThirdParty\glm\include\glm\gtx\vector_query.inl" />
     <None Include="ThirdParty\glm\include\glm\gtx\wrap.inl" />
     <None Include="WorkingDir\deferred.glsl" />
+    <None Include="WorkingDir\hdrToCubemap.glsl" />
   </ItemGroup>
 </Project>

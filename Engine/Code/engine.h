@@ -76,6 +76,8 @@ struct Model
 {
     u32                 meshIdx;
     std::vector<u32>    materialIdx;
+
+    void Render(App* app, Program& program);
 };
 
 struct Submesh
@@ -155,7 +157,9 @@ struct App
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
     u32 waterProgramIdx;
-    
+    GLuint lightingPassProgram;
+    GLuint skyBoxProgram;
+
     // texture indices
     u32 diceTexIdx;
     u32 whiteTexIdx;
@@ -164,8 +168,9 @@ struct App
     u32 magentaTexIdx;
 
     //mesh 
-    u32 quadMesh;
     u32 quadModel;
+    u32 cubeModel;
+
     // Mode
     Mode mode;
 
@@ -176,8 +181,8 @@ struct App
 
     // Location of the texture uniform in the textured quad shader
     GLuint programUniformTexture;
-    GLuint lightingPassProgram;
     GLuint textureMeshProgram_uTexture;
+    u32 skyTexture;
 
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;

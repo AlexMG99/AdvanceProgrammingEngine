@@ -26,6 +26,7 @@
     <ClCompile Include="Code\Entity.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="Code\Program.cpp" />
+    <ClCompile Include="Code\WaterEffect.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
     <ClCompile Include="ThirdParty\glm\include\glm\detail\glm.cpp" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp" />
@@ -51,6 +52,7 @@
     <ClInclude Include="Code\Resources\Enviroment.h" />
     <ClInclude Include="Code\Resources\Texture.h" />
     <ClInclude Include="Code\Resources\TextureCube.h" />
+    <ClInclude Include="Code\WaterEffect.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\ai_assert.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\anim.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\camera.h" />

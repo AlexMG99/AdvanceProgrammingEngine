@@ -98,7 +98,22 @@ void WaterEffect::passWaterScene(App* app, Camera* camera, GLenum colorAttachmen
 	glUseProgram(waterProgram.handle);
 
 	// If it is Binded El buffer esta mal, no se como va
-	glm::mat4x4 viewMatrix = camera->viewMatrix;
+	glm::mat4x4 viewMatrix = camera->viewMatrix; // El lo pone a QMatrix4x4
+
+	waterProgram.glUniformMatrix4("viewMatrix", viewMatrix);
+	waterProgram.glUniformMatrix4("projectionMatrix", camera->projMatrix);
+	waterProgram.glUniformVec3("eyeWorldspace", glm::vec3(camera->viewMatrix * glm::vec4(0.0,0.0,0.0,1.0))); // world matrix
+
+	if (part == WaterScenePart::Reflection)
+	{
+		waterProgram.glUniformVec4("clippingPlane", glm::vec4(0, 1, 0, 0));
+	}
+	else
+	{
+		waterProgram.glUniformVec4("clippingPlane", glm::vec4(0, -1, 0, 0));
+	}
+
+	glDisable(GL_CLIP_DISTANCE0);
 
 }
 

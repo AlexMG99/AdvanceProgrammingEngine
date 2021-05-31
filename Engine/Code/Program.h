@@ -43,6 +43,7 @@ struct Program
     void glUniformInt(const char* name, int value);
     void glUniformMatrix4( const char* name, glm::mat4 mat4);
     void glUniformVec3(const char* name, glm::vec3 vec);
+    void glUniformVec4(const char* name, glm::vec4 vec);
 };
 struct App;
 u32 LoadProgram(App* app, const char* filepath, const char* programName);

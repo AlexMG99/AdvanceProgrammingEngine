@@ -55,7 +55,13 @@ struct Light
 enum Mode
 {
     Mode_TexturedQuad,
+    Mode_WaterShader,
     Mode_Count
+};
+
+enum WaterScenePart {
+    Reflection,
+    Refraction
 };
 
 struct OpenGLInfo
@@ -108,7 +114,7 @@ struct Material
     vec3 albedo;
     vec3 emissive;
     f32 smoothness;
-    u32 albedoTextureIdx;
+    i32 albedoTextureIdx = -1;
     u32 emissiveTextureIdx;
     u32 specularTextureIdx;
     u32 normalsTextureIdx;
@@ -160,6 +166,7 @@ struct App
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
     u32 waterProgramIdx;
+    u32 clippingProgramIdx;
     u32 simpleProgramIdx;
     u32 skyboxProgramId;
     GLuint lightingPassProgram;
@@ -175,6 +182,8 @@ struct App
     //mesh 
     u32 quadModel;
     u32 cubeModel;
+
+    u32 waterPlane;
 
     // Mode
     Mode mode;
@@ -230,6 +239,8 @@ void Gui(App* app);
 void Update(App* app);
 
 void Render(App* app);
+
+void PassWaterScene(App* app, WaterScenePart part);
 
 u32 LoadTexture2D(App* app, const char* filepath);
 

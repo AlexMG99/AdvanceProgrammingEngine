@@ -190,10 +190,15 @@ void Init(App* app)
     Program& skyboxProgram = app->programs[app->skyboxProgramId];
     skyboxProgram.Bind();
     skyboxProgram.glUniformInt("environmentMap", 0);
+    app->clippingProgramIdx = LoadProgram(app, "shadersClipping.glsl", "TEXTURED_GEOMETRY");
 
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");
     u32 sphereID = LoadModel(app, "Sphere/sphere.obj");
+    u32 mountainModel = LoadModel(app, "Mountain/mountain.obj");
+    u32 waterModel = LoadModel(app, "Water/water.obj");
+
+
     app->quadModel = CreatePlane(app);
     app->cubeModel =  CreateCube(app);
     
@@ -205,6 +210,8 @@ void Init(App* app)
 
     app->mode = Mode_TexturedQuad;
 
+    app->mode = Mode_WaterShader;
+
     //Entities =====
     Entity entity;
     //app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
@@ -213,15 +220,27 @@ void Init(App* app)
     //entity.Rotate(0, -30, 0);
     //app->entities.push_back(entity);
 
-    entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
-    entity.Rotate(0, -30, 0);
-    app->entities.push_back(entity);
+    if (app->mode == Mode_WaterShader)
+    {
+        // Mountain and water assets
+        entity = Entity(vec3(0.0, 10.0, 0.0), mountainModel);
+        app->entities.push_back(entity);
 
-    entity = Entity(vec3(-4.0, 0.0, 3.0), patrickID);
-    entity.Rotate(0, 30, 0);
-    app->entities.push_back(entity);
+        entity = Entity(vec3(0.0, 10.0, 0.0), waterModel);
+        app->entities.push_back(entity);
+    }
+    else
+    {
+        entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
+        entity.Rotate(0, -30, 0);
+        app->entities.push_back(entity);
 
-    app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
+        entity = Entity(vec3(-4.0, 0.0, 3.0), patrickID);
+        entity.Rotate(0, 30, 0);
+        app->entities.push_back(entity);
+
+        app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
+    }
 
     InitGBuffer(app);
 
@@ -445,11 +464,57 @@ void Render(App* app)
                 
             }
             break;
+        case Mode_WaterShader:
+            {
+                PassWaterScene(app, WaterScenePart::Refraction);
+
+            }
+        break;
 
         default:
             
             break;
     }
+}
+
+
+void PassWaterScene(App* app, WaterScenePart part)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CLIP_DISTANCE0);
+
+    // Draw function
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    Program& clippingShader = app->programs[app->clippingProgramIdx];
+    clippingShader.Bind();
+    clippingShader.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
+    clippingShader.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
+
+    if (part == WaterScenePart::Reflection)
+    {
+        clippingShader.glUniformVec4("clippingPlane", glm::vec4(0, 1, 0, 0));
+    }
+    else
+    {
+        clippingShader.glUniformVec4("clippingPlane", glm::vec4(0, -1, 0, 0));
+    }
+
+    RenderScene(app, clippingShader);
+
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Deferred Shading ======
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
 }
 
 void Mesh::SetupBuffers()
@@ -538,9 +603,18 @@ void RenderScene(App* app, Program& program)
             u32 submeshMaterialIdx = model.materialIdx[i];
             Material& submeshMaterial = app->materials[submeshMaterialIdx];
 
-            glUniform1i(app->textureMeshProgram_uTexture, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+            if (submeshMaterial.albedoTextureIdx != -1)
+            {
+                program.glUniformInt("hasTexture", 1);
+                glUniform1i(app->textureMeshProgram_uTexture, 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+            }
+            else
+            {
+                program.glUniformInt("hasTexture", 0);
+                program.glUniformVec3("color", submeshMaterial.albedo);
+            }
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

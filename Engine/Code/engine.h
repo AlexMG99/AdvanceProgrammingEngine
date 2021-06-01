@@ -222,3 +222,5 @@ void Render(App* app);
 u32 LoadTexture2D(App* app, const char* filepath);
 
 void InitGBuffer(App* app);
+
+void RenderScene(App* app, Program& program);

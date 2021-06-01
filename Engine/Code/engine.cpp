@@ -13,9 +13,6 @@
 #include "buffer_management.h"
 #include "Core.h"
 
-
-
-
 u32 LoadTexture2D(App* app, const char* filepath)
 {
     for (u32 texIdx = 0; texIdx < app->textures.size(); ++texIdx)
@@ -27,7 +24,12 @@ u32 LoadTexture2D(App* app, const char* filepath)
     if (image.pixels)
     {
         Texture tex = {};
-        tex.handle = CreateTexture2DFromImage(image);
+
+        if(!image.isHDR)
+            tex.handle = CreateTexture2DFromImage(image);
+        else
+            tex.handle = CreateTexture2DFromHDRImage(image);
+
         tex.filepath = filepath;
 
         u32 texIdx = app->textures.size();
@@ -93,9 +95,7 @@ void InitGBuffer(App* app)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     app->lightingPassProgram = LoadProgram(app, "deferred.glsl", "TEXTURED_GEOMETRY");
-    app->skyBoxProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
-    app->simpleProgramIdx = LoadProgram(app, "Simple.glsl", "");
-    app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
+   
 
     Program& geometryProgram = app->programs[app->lightingPassProgram];
    
@@ -185,13 +185,24 @@ void Init(App* app)
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
     //Load Water Shader
-    app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
+    //app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
+    app->skyboxProgramId = LoadProgram(app, "skybox.glsl", "SKYBOX");
+    Program& skyboxProgram = app->programs[app->skyboxProgramId];
+    skyboxProgram.Bind();
+    skyboxProgram.glUniformInt("environmentMap", 0);
 
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");
     u32 sphereID = LoadModel(app, "Sphere/sphere.obj");
     app->quadModel = CreatePlane(app);
     app->cubeModel =  CreateCube(app);
+    
+    GenerateEnviromentCaptureFrames(app);
+    app->bakeCubeMapProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
+    app->simpleProgramIdx = LoadProgram(app, "Simple.glsl", "");
+    app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
+    app->enviroment.CreateEnviromentFromTexture(app, app->textures[app->skyTexture]);
+
     app->mode = Mode_TexturedQuad;
 
     //Entities =====
@@ -350,22 +361,21 @@ void Render(App* app)
                 // Draw function
                 glClearColor(0.f, 0.f, 0.f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glEnable(GL_DEPTH_TEST);
+                glDisable(GL_DEPTH_TEST);
 
                 glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-                Program& skyProgram = app->programs[app->skyBoxProgram];
+                Program& skyProgram = app->programs[app->skyboxProgramId];
                 skyProgram.Bind();
-                skyProgram.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
-                skyProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
+                skyProgram.glUniformMatrix4("projection", app->cam->projMatrix);
+                skyProgram.glUniformMatrix4("view", app->cam->viewMatrix);
                
-                Texture& skyTex = app->textures[app->skyTexture];
-                skyTex.Bind(0);
+                app->enviroment.BindEnviroment(0);
 
                 Model& cubeModel = app->models[app->cubeModel];
                 cubeModel.Render(app, skyProgram);
 
-               
+                glEnable(GL_DEPTH_TEST);
 
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
                 texturedMeshProgram.Bind();

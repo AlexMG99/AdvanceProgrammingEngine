@@ -15,6 +15,7 @@ struct Image
     ivec2 size;
     i32   nchannels;
     i32   stride;
+    bool isHDR = false;
 };
 
 
@@ -29,3 +30,4 @@ class Texture
 Image LoadImage(const char* filename);
 void FreeImage(Image image);
 GLuint CreateTexture2DFromImage(Image image);
+GLuint CreateTexture2DFromHDRImage(Image image);

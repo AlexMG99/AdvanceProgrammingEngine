@@ -2,5 +2,5 @@
 
 class Component
 {
-	virtual void HandleResourcesAboutToDie();
+	virtual void HandleResourcesAboutToDie() {};
 };

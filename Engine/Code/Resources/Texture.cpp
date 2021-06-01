@@ -10,6 +10,7 @@ Image LoadImage(const char* filename)
     {
         stbi_set_flip_vertically_on_load(true);
         img.pixels = stbi_loadf(filename, &img.size.x, &img.size.y, &img.nchannels, 0);
+        img.isHDR = true;
     }
     else
     {
@@ -58,6 +59,31 @@ GLuint CreateTexture2DFromImage(Image image)
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    return texHandle;
+}
+
+GLuint CreateTexture2DFromHDRImage(Image image)
+{
+    GLenum internalFormat = GL_RGB16F;
+    GLenum dataFormat = GL_RGB;
+    GLenum dataType = GL_FLOAT;
+
+    switch (image.nchannels)
+    {
+    case 3: dataFormat = GL_RGB; internalFormat = GL_RGB8; break;
+    case 4: dataFormat = GL_RGBA; internalFormat = GL_RGBA8; break;
+    default: ELOG("LoadTexture2D() - Unsupported number of channels");
+    }
+
+    GLuint texHandle;
+    glGenTextures(1, &texHandle);
+    glBindTexture(GL_TEXTURE_2D, texHandle);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image.size.x, image.size.y, 0, dataFormat, dataType, image.pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
     return texHandle;
 }
 

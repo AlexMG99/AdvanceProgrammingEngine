@@ -26,6 +26,8 @@
     <ClCompile Include="Code\Entity.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="Code\Program.cpp" />
+    <ClCompile Include="Code\Resources\Enviroment.cpp" />
+    <ClCompile Include="Code\Resources\FrameBuffer.cpp" />
     <ClCompile Include="Code\Resources\Texture.cpp" />
     <ClCompile Include="Code\WaterEffect.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
@@ -51,8 +53,8 @@
     <ClInclude Include="Code\Program.h" />
     <ClInclude Include="Code\Resources\Component.h" />
     <ClInclude Include="Code\Resources\Enviroment.h" />
+    <ClInclude Include="Code\Resources\FrameBuffer.h" />
     <ClInclude Include="Code\Resources\Texture.h" />
-    <ClInclude Include="Code\Resources\TextureCube.h" />
     <ClInclude Include="Code\WaterEffect.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\ai_assert.h" />
     <ClInclude Include="ThirdParty\Assimp\include\assimp\anim.h" />
@@ -539,6 +541,7 @@
     <None Include="WorkingDir\shaders.glsl" />
     <None Include="WorkingDir\hdrToCubemap.glsl" />
     <None Include="WorkingDir\Simple.glsl" />
+    <None Include="WorkingDir\skybox.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -12,6 +12,8 @@
 #include "camera.h"
 #include "Entity.h"
 #include "Resources/Texture.h"
+#include "Resources/FrameBuffer.h"
+#include "Resources/Enviroment.h"
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -153,13 +155,15 @@ struct App
     std::vector<Model>      models;
     std::vector<Program>    programs;
     std::vector<Entity>     entities;
+
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
     u32 waterProgramIdx;
     u32 simpleProgramIdx;
+    u32 skyboxProgramId;
     GLuint lightingPassProgram;
-    GLuint skyBoxProgram;
+    GLuint bakeCubeMapProgram;
 
     // texture indices
     u32 diceTexIdx;
@@ -198,13 +202,21 @@ struct App
     // Buffer
     Buffer cbuffer;
     Buffer deferredbuffer;
+    
+    //Enviroments
+    Enviroment enviroment;
 
+    //
     u32     globalParamsOffset;
     u32     globalParamsSize;
 
     GLint uniformBlockAligment;
     unsigned int gBuffer;
     u32 gDiffuse, gDepth, gNormals, gPosition;
+
+    //To bake HDR to Cubemap
+    FBO captureFBO;
+    RBO captureRBO;
 
     int renderMode = 0;
 
@@ -224,3 +236,4 @@ u32 LoadTexture2D(App* app, const char* filepath);
 void InitGBuffer(App* app);
 
 void RenderScene(App* app, Program& program);
+

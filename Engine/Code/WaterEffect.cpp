@@ -1,6 +1,7 @@
 #include "WaterEffect.h"
 #include "buffer_management.h"
 
+
 void WaterEffect::createBuffers(App* app)
 {
 	// Create fboReflection
@@ -64,7 +65,7 @@ void WaterEffect::renderWater(App* app, Camera* camera)
 	//reflectionCamera.viewportHeight = reflectionCamera.viewportHeight;
 	reflectionCamera.CalculateProjViewMatrix();
 
-	passWaterScene(app, &reflectionCamera, GL_COLOR_ATTACHMENT0, WaterScenePart::Reflection);
+	//passWaterScene(app, &reflectionCamera, GL_COLOR_ATTACHMENT0, WaterScenePart::Reflection);
 	//passBackground(&reflectionCamera, GL_COLOR_ATTACHMENT0); // Quizas es passar la textura de color?
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -78,13 +79,13 @@ void WaterEffect::renderWater(App* app, Camera* camera)
 	//reflectionCamera.viewportHeight = reflectionCamera.viewportHeight;
 	refractionCamera.CalculateProjViewMatrix();
 
-	passWaterScene(app, &refractionCamera, GL_COLOR_ATTACHMENT0, WaterScenePart::Refraction);
+	//passWaterScene(app, &refractionCamera, GL_COLOR_ATTACHMENT0, WaterScenePart::Refraction);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
-void WaterEffect::passWaterScene(App* app, Camera* camera, GLenum colorAttachment, WaterScenePart part)
+/*void WaterEffect::passWaterScene(App* app, Camera* camera, GLenum colorAttachment, WaterScenePart part)
 {
 	glDrawBuffer(colorAttachment);
 
@@ -113,9 +114,12 @@ void WaterEffect::passWaterScene(App* app, Camera* camera, GLenum colorAttachmen
 		waterProgram.glUniformVec4("clippingPlane", glm::vec4(0, -1, 0, 0));
 	}
 
+	// Pass other parameters
+	waterProgram.glUniformVec2("viewportSize", glm::vec2(app->displaySize.x, app->displaySize.y));
+
 	glDisable(GL_CLIP_DISTANCE0);
 
-}
+}*/
 
 void WaterEffect::cleanUp()
 {

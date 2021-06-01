@@ -148,4 +148,10 @@ void Program::glUniformVec4(const char* name, glm::vec4 vec)
     glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
 }
 
+void Program::glUniformVec2(const char* name, glm::vec2 vec)
+{
+    GLuint location = glGetUniformLocation(handle, name);
+    glUniform2f(location, vec.x, vec.y);
+}
+
 

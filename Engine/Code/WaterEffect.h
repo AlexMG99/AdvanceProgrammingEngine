@@ -1,9 +1,5 @@
 #include "engine.h"
 
-enum WaterScenePart {
-	Reflection,
-	Refraction
-};
 
 class WaterEffect {
 	WaterEffect() {};
@@ -16,7 +12,7 @@ class WaterEffect {
 
 	void renderWater(App* app, Camera* camera);
 
-	void passWaterScene(App* app, Camera* camera, GLenum colorAttachment, WaterScenePart part);
+	//void passWaterScene(App* app, Camera* camera, GLenum colorAttachment, WaterScenePart part);
 
 	void cleanUp();
 

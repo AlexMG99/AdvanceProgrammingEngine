@@ -210,7 +210,7 @@ void Init(App* app)
 
     app->mode = Mode_TexturedQuad;
 
-    app->mode = Mode_WaterShader;
+   // app->mode = Mode_WaterShader;
 
     //Entities =====
     Entity entity;
@@ -253,12 +253,12 @@ void Init(App* app)
     app->lights.push_back(light);
     entity = Entity(vec3(10, 10, 10), sphereID);
     app->entities.push_back(entity);
-
+    
     light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
     app->lights.push_back(light);
     entity = Entity(vec3(3, 2, 3), sphereID);
     app->entities.push_back(entity);
-
+    
     light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
     app->lights.push_back(light);
     entity = Entity(vec3(-5, 5, 0), sphereID);

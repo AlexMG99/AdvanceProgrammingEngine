@@ -7,8 +7,10 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     GLint   success;
 
     char versionString[] = "#version 430\n";
-    char shaderNameDefine[128];
-    sprintf(shaderNameDefine, "#define %s\n", shaderName);
+    char shaderNameDefine[128] = "\n";
+    if(shaderName != "")
+        sprintf(shaderNameDefine, "#define %s\n", shaderName);
+
     char vertexShaderDefine[] = "#define VERTEX\n";
     char fragmentShaderDefine[] = "#define FRAGMENT\n";
 
@@ -54,6 +56,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
     if (!success)
     {
         glGetShaderInfoLog(fshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
+
         ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
     }
 

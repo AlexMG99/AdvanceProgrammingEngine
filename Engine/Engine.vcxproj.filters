@@ -591,5 +591,6 @@
     <None Include="ThirdParty\glm\include\glm\gtx\wrap.inl" />
     <None Include="WorkingDir\deferred.glsl" />
     <None Include="WorkingDir\hdrToCubemap.glsl" />
+    <None Include="WorkingDir\Simple.glsl" />
   </ItemGroup>
 </Project>

@@ -157,6 +157,7 @@ struct App
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
     u32 waterProgramIdx;
+    u32 simpleProgramIdx;
     GLuint lightingPassProgram;
     GLuint skyBoxProgram;
 

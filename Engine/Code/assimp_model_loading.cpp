@@ -270,14 +270,15 @@ u32 CreateCube(App* app)
     std::vector<float> vertices;
     std::vector<u32> indices;
 
-	vertices = { -1, -1, -1, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-				  1, -1, -1, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
-				  1,  1, -1, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,
-				 -1,  1, -1, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f,
-				 -1, -1,  1, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-                  1, -1,  1, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,
-                  1,  1,  1, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,
-                 -1,  1,  1, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, };
+    float length = 1.0;
+	vertices = { -length, -length, -length, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,         //0
+                  length, -length, -length, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,         //1
+                  length,  length, -length, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,         //2
+				 -length,  length, -length, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f,         //3
+                 -length, -length,  length, 0.0f, 0.0f, 0.0f,  0.0f, 0.0f,         //4
+                  length, -length,  length, 0.0f, 0.0f, 0.0f,  1.0f, 0.0f,         //5
+                  length,  length,  length, 0.0f, 0.0f, 0.0f,  1.0f, 1.0f,         //6
+                 -length,  length,  length, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, };      //7
 
     indices = { 0, 1, 3, 3, 1, 2,
                 1, 5, 2, 2, 5, 6,

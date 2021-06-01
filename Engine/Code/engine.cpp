@@ -94,7 +94,9 @@ void InitGBuffer(App* app)
 
     app->lightingPassProgram = LoadProgram(app, "deferred.glsl", "TEXTURED_GEOMETRY");
     app->skyBoxProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
+    app->simpleProgramIdx = LoadProgram(app, "Simple.glsl", "");
     app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
+
     Program& geometryProgram = app->programs[app->lightingPassProgram];
    
     geometryProgram.Bind();
@@ -194,7 +196,11 @@ void Init(App* app)
 
     //Entities =====
     Entity entity;
-    app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
+    //app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
+
+    //entity = Entity(vec3(0.0, 0.0, 0.0), app->cubeModel);
+    //entity.Rotate(0, -30, 0);
+    //app->entities.push_back(entity);
 
     entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
     entity.Rotate(0, -30, 0);
@@ -344,22 +350,22 @@ void Render(App* app)
                 // Draw function
                 glClearColor(0.f, 0.f, 0.f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glEnable(GL_DEPTH_TEST);
+
+                glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
                 Program& skyProgram = app->programs[app->skyBoxProgram];
                 skyProgram.Bind();
                 skyProgram.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
                 skyProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
-                skyProgram.glUniformVec3("localPosition", app->cam->position);
-                skyProgram.glUniformInt("equirectangularMap", 0);
+               
                 Texture& skyTex = app->textures[app->skyTexture];
                 skyTex.Bind(0);
 
-                //Model& cubeModel = app->models[app->cubeModel];
-                //cubeModel.Render(app, skyProgram);
+                Model& cubeModel = app->models[app->cubeModel];
+                cubeModel.Render(app, skyProgram);
 
-                glEnable(GL_DEPTH_TEST);
-
-                glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+               
 
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
                 texturedMeshProgram.Bind();
@@ -403,8 +409,8 @@ void Render(App* app)
                     }
                 }
                 
-                Model& cubeModel = app->models[app->cubeModel];
-                cubeModel.Render(app, texturedMeshProgram);
+                //Model& cubeModel = app->models[app->cubeModel];
+                //cubeModel.Render(app, texturedMeshProgram);
 
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -516,8 +522,7 @@ void Mesh::SetupBuffers()
 
 void Model::Render(App* app, Program& program)
 {
-    Model& modelQuad = app->models[app->quadModel];
-    Mesh& meshQuad = app->meshes[modelQuad.meshIdx];
+    Mesh& meshQuad = app->meshes[this->meshIdx];
     for (u32 i = 0; i < meshQuad.submeshes.size(); ++i)
     {
         GLuint vao = FindVAO(meshQuad, i, program);

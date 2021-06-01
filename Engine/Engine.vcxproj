@@ -538,6 +538,7 @@
     <None Include="WorkingDir\deferred.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
     <None Include="WorkingDir\hdrToCubemap.glsl" />
+    <None Include="WorkingDir\Simple.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

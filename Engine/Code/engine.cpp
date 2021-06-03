@@ -188,7 +188,7 @@ void Init(App* app)
     app->textureMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
     //Load Water Shader
-    //app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
+    app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
     app->skyboxProgramId = LoadProgram(app, "skybox.glsl", "SKYBOX");
     Program& skyboxProgram = app->programs[app->skyboxProgramId];
     skyboxProgram.Bind();

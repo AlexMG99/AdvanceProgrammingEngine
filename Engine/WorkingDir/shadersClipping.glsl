@@ -14,8 +14,7 @@ layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
 
-uniform mat4 viewMatrix;
-uniform mat4 uWorldMatrix;
+uniform mat4 viewMatrixReflection;
 uniform mat4 uWorlViewProjectionMatrix;
 
 
@@ -26,7 +25,7 @@ void main()
 {
 	vTexCoord	= aTexCoord;
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
-	vPosition = uWorldMatrix * vec4(aPosition, 1.0);
+	vPosition = vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////

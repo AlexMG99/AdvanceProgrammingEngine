@@ -225,7 +225,7 @@ void Init(App* app)
         entity = Entity(vec3(0.0, 0.0, 0.0), mountainModel);
         app->entities.push_back(entity);
 
-        app->waterPlaneEntity = &Entity(vec3(20.0, 0.0, 0.0), waterModel);
+        app->waterPlaneEntity = new Entity(vec3(20.0, 0.0, 0.0), waterModel);
         app->entities.push_back(*app->waterPlaneEntity);
     }
     else
@@ -471,7 +471,7 @@ void Render(App* app)
                 refractionCamera.CalculateProjViewMatrix();
 
                 PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
-
+                PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
             }
         break;
 
@@ -497,9 +497,9 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 
     Program& clippingShader = app->programs[app->clippingProgramIdx];
     clippingShader.Bind();
-    clippingShader.glUniformMatrix4("uWorlViewProjectionMatrix", camera.projViewMatrix);
-    clippingShader.glUniformMatrix4("uWorldMatrix", camera.viewMatrix);
-    clippingShader.glUniformInt("planeY", app->waterPlaneEntity->pos.y);
+    clippingShader.glUniformMatrix4("uWorlViewProjectionMatrix", app->cam->projViewMatrix);
+    clippingShader.glUniformMatrix4("viewMatrixReflection", camera.viewMatrix);
+    clippingShader.glUniformInt("planeY", 0);
 
     if (part == WaterScenePart::Reflection)
     {

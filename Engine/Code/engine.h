@@ -213,7 +213,7 @@ struct App
     // Buffer
     Buffer cbuffer;
     Buffer deferredbuffer;
-    
+
     //Enviroments
     Enviroment enviroment;
 

@@ -41,12 +41,17 @@ layout (location = 2) out vec4 gPosition;
 in vec2 vTexCoord;
 in vec3 vPosition;
 in vec3 vNormal;
-
+uniform int hasTexture;
+uniform vec3 color;
 uniform sampler2D uTexture;
 
 void main()
 {
-	gDifusse = texture(uTexture, vTexCoord);
+	if(hasTexture == 1)
+		gDifusse = texture(uTexture, vTexCoord);
+	else
+		gDifusse = vec4(color, 1.0);
+		
 	gNormal = vec4(vNormal,1.0);
 	gPosition = vec4(vPosition,1.0);
 }

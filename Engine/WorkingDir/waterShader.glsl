@@ -46,7 +46,9 @@ in Data
 	vec3 normalViewspace;
 } FSIn;
 
-out vec4 outColor;
+layout (location = 0) out vec4 gDifusse;		
+layout (location = 1) out vec4 gNormal;		
+layout (location = 2) out vec4 gPosition;		
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0){
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -91,8 +93,12 @@ void main()
 	// Fresnel
 	vec3 F0 = vec3(0.1);
 	vec3 F = fresnelSchlick(max(0.0, dot(V, N)), F0);
-	outColor.rgb = mix(refractionColor, reflectionColor, F);
-	outColor.a = 1.0;
+	gDifusse.rgb = mix(refractionColor, reflectionColor, F);
+	gDifusse.a = 1.0;
+
+	gNormal = vec4(FSIn.normalViewspace, 1.0);
+	gPosition = vec4(FSIn.positionViewspace,1.0);
+	
 }
 
 #endif

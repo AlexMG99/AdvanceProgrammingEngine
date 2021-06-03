@@ -210,6 +210,10 @@ void Init(App* app)
     app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
     app->enviroment.CreateEnviromentFromTexture(app, app->textures[app->skyTexture]);
 
+    //Textures ==
+    app->normalWaterIdx = LoadTexture2D(app, "Water/normalMap.png");
+    app->dudvWaterIdx = LoadTexture2D(app, "Water/waterDUDV.png");
+
     app->mode = Mode_WaterShader;
 
    // app->mode = Mode_WaterShader;
@@ -229,7 +233,7 @@ void Init(App* app)
         app->entities.push_back(entity);
 
         app->waterEffect.waterPlaneEntity = new Entity(vec3(20.0, 0.0, 0.0), waterModel);
-        app->entities.push_back(*app->waterEffect.waterPlaneEntity);
+        //app->entities.push_back(*app->waterEffect.waterPlaneEntity);
     }
     else
     {
@@ -378,96 +382,15 @@ void Render(App* app)
     {
         case Mode_TexturedQuad:
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, app->gBuffer);
-                // Draw function
-                glClearColor(0.f, 0.f, 0.f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glDisable(GL_DEPTH_TEST);
+                RenderInGBuffer(app);
 
-                glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-                Program& skyProgram = app->programs[app->skyboxProgramId];
-                skyProgram.Bind();
-                skyProgram.glUniformMatrix4("projection", app->cam->projMatrix);
-                skyProgram.glUniformMatrix4("view", app->cam->viewMatrix);
-               
-                app->enviroment.BindEnviroment(0);
-
-                Model& cubeModel = app->models[app->cubeModel];
-                cubeModel.Render(app, skyProgram);
-
-                glEnable(GL_DEPTH_TEST);
-
-                Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-                texturedMeshProgram.Bind();
-          
-                RenderScene(app, *app->cam, texturedMeshProgram);
-                
-                //Model& cubeModel = app->models[app->cubeModel];
-                //cubeModel.Render(app, texturedMeshProgram);
-
-                glUnmapBuffer(GL_UNIFORM_BUFFER);
-                glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-                // Deferred Shading ======
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                // Draw in the screen ===
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                
-                Program& lightingProgram = app->programs[app->lightingPassProgram];
-                glUseProgram(lightingProgram.handle);
-                
-                glBindBuffer(GL_UNIFORM_BUFFER, app->deferredbuffer.handle);
-                app->deferredbuffer.head = 0;
-                app->deferredbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-
-                // GlobalParams
-                app->globalParamsOffset = app->deferredbuffer.head;
-
-                PushVec3(app->deferredbuffer, app->cam->position);
-                PushUInt(app->deferredbuffer, app->lights.size());
-
-                for (u32 i = 0; i < app->lights.size(); ++i)
-                {
-                    AlignHead(app->deferredbuffer, sizeof(vec4));
-
-                    Light& light = app->lights[i];
-                    PushUInt(app->deferredbuffer, light.type);
-                    PushVec3(app->deferredbuffer, normalize(light.color));
-                    PushVec3(app->deferredbuffer, normalize(light.direction));
-                    PushVec3(app->deferredbuffer, light.position);
-
-                }
-
-                app->globalParamsSize = app->deferredbuffer.head - app->globalParamsOffset;
-
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-
-                lightingProgram.glUniformInt("renderMode", app->renderMode);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
-
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, app->gNormals);
-
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, app->gDepth);
-
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, app->gPosition);
-
-                Model& modelQuad = app->models[app->quadModel];
-                modelQuad.Render(app, texturedMeshProgram);
-               
-                glUnmapBuffer(GL_UNIFORM_BUFFER);
-                glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+                LightingPass(app);
                 
             }
             break;
         case Mode_WaterShader:
             {
+
                 Camera refractionCamera = *app->cam;
                 refractionCamera.position.y = -refractionCamera.position.y;
                 refractionCamera.rotation.x = -refractionCamera.rotation.x;
@@ -477,24 +400,9 @@ void Render(App* app)
 
                 PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
 
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                RenderInGBuffer(app);
 
-                glClearColor(0.f, 0.f, 0.f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                Model& modelQuad = app->models[app->quadModel];
-
-                Program& simpleShader = app->programs[app->simpleProgramIdx];
-                simpleShader.Bind();
-
-                simpleShader.glUniformInt("tex", 0);
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflection);
-
-                modelQuad.Render(app, simpleShader);
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+                LightingPass(app);
             }
         break;
 
@@ -704,4 +612,136 @@ void createDepthTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, id, 0);
+}
+
+void RenderInGBuffer(App* app)
+{
+    glEnable(GL_DEPTH_TEST);
+    //Skybox
+    glBindFramebuffer(GL_FRAMEBUFFER, app->gBuffer);
+    // Draw function
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+   // RenderSkybox(app);
+
+    Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+    texturedMeshProgram.Bind();
+
+    RenderScene(app, *app->cam, texturedMeshProgram);
+
+    RenderWater(app);
+}
+
+void RenderSkybox(App* app)
+{
+    glDisable(GL_DEPTH_TEST);
+    Program& skyProgram = app->programs[app->skyboxProgramId];
+    skyProgram.Bind();
+    skyProgram.glUniformMatrix4("projection", app->cam->projMatrix);
+    skyProgram.glUniformMatrix4("view", app->cam->viewMatrix);
+
+    app->enviroment.BindEnviroment(0);
+
+    Model& cubeModel = app->models[app->cubeModel];
+    cubeModel.Render(app, skyProgram);
+
+    glEnable(GL_DEPTH_TEST);
+}
+
+void RenderWater(App* app)
+{
+    Program& waterShader = app->programs[app->waterProgramIdx];
+    waterShader.Bind();
+
+    waterShader.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
+    waterShader.glUniformMatrix4("worldViewMatrix",  app->waterEffect.waterPlaneEntity->worldMatrix * app->cam->viewMatrix);
+    waterShader.glUniformVec2("viewportSize", app->displaySize);
+    waterShader.glUniformMatrix4("modelViewMatrix", app->cam->viewMatrix); // TODO later model Matrix?
+    waterShader.glUniformMatrix4("viewMatrixInv", glm::inverse(app->cam->viewMatrix));
+    waterShader.glUniformMatrix4 ("projectionMatrixInv", glm::inverse(app->cam->projMatrix));
+
+    waterShader.glUniformInt("reflectionMap", 0);
+    waterShader.glUniformInt("refractionMap", 1);
+    waterShader.glUniformInt("reflectionDepth", 2);
+    waterShader.glUniformInt("refractionDepth", 3);
+    waterShader.glUniformInt("normalMap", 4);
+    waterShader.glUniformInt("dudvMap", 5);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflection);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtRefraction);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflectDepth);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtRefractDepth);
+
+    app->textures[app->normalWaterIdx].Bind(4);
+    app->textures[app->dudvWaterIdx].Bind(5);
+
+    Model& plane = app->models[app->waterEffect.waterPlaneEntity->modelIndex];
+    plane.Render(app, waterShader);
+}
+
+void LightingPass(App* app)
+{
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Deferred Shading ======
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Draw in the screen ===
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    Program& lightingProgram = app->programs[app->lightingPassProgram];
+    glUseProgram(lightingProgram.handle);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, app->deferredbuffer.handle);
+    app->deferredbuffer.head = 0;
+    app->deferredbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+
+    // GlobalParams
+    app->globalParamsOffset = app->deferredbuffer.head;
+
+    PushVec3(app->deferredbuffer, app->cam->position);
+    PushUInt(app->deferredbuffer, app->lights.size());
+
+    for (u32 i = 0; i < app->lights.size(); ++i)
+    {
+        AlignHead(app->deferredbuffer, sizeof(vec4));
+
+        Light& light = app->lights[i];
+        PushUInt(app->deferredbuffer, light.type);
+        PushVec3(app->deferredbuffer, normalize(light.color));
+        PushVec3(app->deferredbuffer, normalize(light.direction));
+        PushVec3(app->deferredbuffer, light.position);
+
+    }
+
+    app->globalParamsSize = app->deferredbuffer.head - app->globalParamsOffset;
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
+    lightingProgram.glUniformInt("renderMode", app->renderMode);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, app->gNormals);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, app->gDepth);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, app->gPosition);
+
+    Model& modelQuad = app->models[app->quadModel];
+    modelQuad.Render(app, lightingProgram);
+
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

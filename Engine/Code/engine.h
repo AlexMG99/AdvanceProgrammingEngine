@@ -194,6 +194,8 @@ struct App
     u32 blackTexIdx;
     u32 normalTexIdx;
     u32 magentaTexIdx;
+    u32 normalWaterIdx;
+    u32 dudvWaterIdx;
 
     //mesh 
     u32 quadModel;
@@ -268,4 +270,13 @@ void RenderScene(App* app, Camera camera, Program& program);
 void createBuffers(App* app, WaterShader& wShader);
 void createTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer);
 void createDepthTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer);
+
+void RenderInGBuffer(App* app);
+
+void RenderSkybox(App* app);
+
+void RenderWater(App* app);
+
+void LightingPass(App* app);
+
 

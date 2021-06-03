@@ -36,7 +36,7 @@ uniform mat4 projectionMatrixInv;
 uniform sampler2D reflectionMap;
 uniform sampler2D refractionMap;
 uniform sampler2D reflectionDepth;
-uniform sampler2D reflractionDepth;
+uniform sampler2D refractionDepth;
 uniform sampler2D normalMap;
 uniform sampler2D dudvMap;
 
@@ -49,15 +49,15 @@ in Data
 out vec4 outColor;
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0){
-	return F0 + (1.0 - F0) * pow(1.0 - cosTetha, 5.0);
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 reconstructionPixelPosition(float depth)
+vec3 reconstructPixelPosition(float depth)
 {
 	vec2 texCoords = gl_FragCoord.xy / viewportSize;
 	vec3 positionNDC = vec3(texCoords * 2.0 - vec2(1.0), depth * 2.0 - 1.0);
 	vec4 positionEyespace = projectionMatrixInv * vec4(positionNDC, 1.0);
-	positionEyespace.xyz =/ positionEyespace.w;
+	positionEyespace.xyz /= positionEyespace.w;
 	return positionEyespace.xyz;
 }
 
@@ -83,8 +83,9 @@ void main()
 	// Water tint
 	float distortedGroundDepth = texture(refractionDepth, refractionTexCoord).x;
 	vec3 distortedGroundPosViewspace = reconstructPixelPosition(distortedGroundDepth);
-	float distortedWaterDepth = FSIn.positionWaterDepth / turbidityDistance;
-	vec3 waterColor = vec3(0.25, 0,4, 0.6);
+	float distortedWaterDepth = FSIn.positionViewspace.z - distortedGroundPosViewspace.z;
+	float tintFactor= clamp(distortedWaterDepth / turbidityDistance, 0.0, 1.0);
+	vec3 waterColor = vec3(0.25, 0.4, 0.6);
 	refractionColor = mix(refractionColor, waterColor, tintFactor);
 
 	// Fresnel

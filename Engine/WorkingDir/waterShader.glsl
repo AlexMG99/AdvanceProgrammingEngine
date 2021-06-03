@@ -12,6 +12,7 @@ layout(location=0) in vec3 position;
 layout(location=1) in vec3 normal;
 
 uniform mat4 projectionMatrix;
+uniform mat4 uWorldMatrix;
 uniform mat4 worldViewMatrix;
 
 out Data
@@ -22,9 +23,9 @@ out Data
 
 void main()
 {
-	VSOut.positionViewspace = vec3(worldViewMatrix * vec4(position, 1.0));
-	VSOut.normalViewspace = vec3(worldViewMatrix * vec4(normal, 1.0));
-	gl_Position = projectionMatrix * vec4(VSOut.positionViewspace, 1.0);
+	VSOut.positionViewspace = vec3(uWorldMatrix * vec4(position, 1.0));
+	VSOut.normalViewspace = mat3(transpose(inverse(uWorldMatrix))) * normal;
+	gl_Position = projectionMatrix * worldViewMatrix  * vec4(position, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
@@ -96,7 +97,7 @@ void main()
 	gDifusse.rgb = mix(refractionColor, reflectionColor, F);
 	gDifusse.a = 1.0;
 
-	gNormal = vec4(FSIn.normalViewspace, 1.0);
+	gNormal = vec4(N, 1.0);
 	gPosition = vec4(FSIn.positionViewspace,1.0);
 	
 }

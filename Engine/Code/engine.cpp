@@ -661,6 +661,7 @@ void RenderWater(App* app)
     waterShader.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
     waterShader.glUniformMatrix4("worldViewMatrix", app->cam->viewMatrix * app->waterEffect.waterPlaneEntity->worldMatrix);
     waterShader.glUniformVec2("viewportSize", app->displaySize);
+    waterShader.glUniformMatrix4("uWorldMatrix", app->waterEffect.waterPlaneEntity->worldMatrix);
     waterShader.glUniformMatrix4("modelViewMatrix", app->cam->viewMatrix); // TODO later model Matrix?
     waterShader.glUniformMatrix4("viewMatrixInv", glm::inverse(app->cam->viewMatrix));
     waterShader.glUniformMatrix4 ("projectionMatrixInv", glm::inverse(app->cam->projMatrix));

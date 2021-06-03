@@ -266,6 +266,6 @@ void RenderScene(App* app, Camera camera, Program& program);
 
 // Water Shader
 void createBuffers(App* app, WaterShader& wShader);
-void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
-void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
+void createTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer);
+void createDepthTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer);
 

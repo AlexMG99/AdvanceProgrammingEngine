@@ -443,7 +443,6 @@ void Render(App* app)
 
                 glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
-
                 lightingProgram.glUniformInt("renderMode", app->renderMode);
 
                 glActiveTexture(GL_TEXTURE0);
@@ -480,7 +479,7 @@ void Render(App* app)
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-                glClearColor(0.f, 0.f, 0.f, 1.0f);
+                glClearColor(0.f, 0.f, 0.f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 Model& modelQuad = app->models[app->quadModel];
@@ -490,7 +489,7 @@ void Render(App* app)
 
                 simpleShader.glUniformInt("tex", 0);
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtRefraction);
+                glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflection);
 
                 modelQuad.Render(app, simpleShader);
 
@@ -543,10 +542,10 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Deferred Shading ======
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Mesh::SetupBuffers()
@@ -659,29 +658,32 @@ void createBuffers(App* app, WaterShader& wShader)
     // Create fboReflection
     glGenFramebuffers(1, &wShader.fboReflection);
     glBindFramebuffer(GL_FRAMEBUFFER, wShader.fboReflection);
-    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
-    glDrawBuffers(2, attachments);
+    glEnable(GL_DEPTH_TEST);
 
     // Assign textures
     createTextureAttachment(app, wShader.rtReflection, wShader.fboReflection);
     createDepthTextureAttachment(app, wShader.rtReflectDepth, wShader.fboReflection);
+
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
+    glDrawBuffers(2, attachments);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Create fboRefraction
     glGenFramebuffers(1, &wShader.fboRefraction);
     glBindFramebuffer(GL_FRAMEBUFFER, wShader.fboRefraction);
-    unsigned int attachments2[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
-    glDrawBuffers(2, attachments2);
+    glEnable(GL_DEPTH_TEST);
 
     // Assign textures
     createTextureAttachment(app, wShader.rtRefraction, wShader.fboRefraction);
     createDepthTextureAttachment(app, wShader.rtRefractDepth, wShader.fboRefraction);
 
+    glDrawBuffers(2, attachments);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
+void createTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer)
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -690,10 +692,10 @@ void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboBuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, id, 0);
 }
 
-void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
+void createDepthTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer)
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -702,5 +704,5 @@ void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fboBuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, id, 0);
 }

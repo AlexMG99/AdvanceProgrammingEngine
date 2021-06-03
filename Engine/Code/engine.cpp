@@ -424,7 +424,7 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
     glEnable(GL_CLIP_DISTANCE0);
 
     // Draw function
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClearColor(0.f, 0.f, 0.f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
@@ -622,12 +622,12 @@ void RenderInGBuffer(App* app)
     //Skybox
     glBindFramebuffer(GL_FRAMEBUFFER, app->gBuffer);
     // Draw function
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClearColor(0.f, 0.f, 0.f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-    RenderSkybox(app, app->cam);
+   
 
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     texturedMeshProgram.Bind();
@@ -697,6 +697,8 @@ void LightingPass(App* app)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // Draw in the screen ===
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    RenderSkybox(app, app->cam);
 
     Program& lightingProgram = app->programs[app->lightingPassProgram];
     glUseProgram(lightingProgram.handle);

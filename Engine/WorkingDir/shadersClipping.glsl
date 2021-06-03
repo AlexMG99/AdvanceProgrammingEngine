@@ -14,12 +14,10 @@ layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
 
+uniform mat4 viewMatrix;
+uniform mat4 uWorldMatrix;
+uniform mat4 uWorlViewProjectionMatrix;
 
-layout(binding = 0, std140) uniform LocalParams
-{
-	mat4 uWorldMatrix;
-	mat4 uWorlViewProjectionMatrix;
-};
 
 out vec2 vTexCoord;
 out vec4 vPosition;
@@ -39,6 +37,7 @@ in vec4 vPosition;
 
 uniform vec4 clippingPlane;
 uniform int hasTexture;
+uniform int planeY;
 
 uniform vec3 color;
 uniform sampler2D uTexture;

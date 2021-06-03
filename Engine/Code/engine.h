@@ -162,6 +162,8 @@ struct App
     std::vector<Program>    programs;
     std::vector<Entity>     entities;
 
+    Entity* waterPlaneEntity;
+
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
@@ -240,11 +242,11 @@ void Update(App* app);
 
 void Render(App* app);
 
-void PassWaterScene(App* app, WaterScenePart part);
+void PassWaterScene(App* app, Camera camera, WaterScenePart part);
 
 u32 LoadTexture2D(App* app, const char* filepath);
 
 void InitGBuffer(App* app);
 
-void RenderScene(App* app, Program& program);
+void RenderScene(App* app, Camera camera, Program& program);
 

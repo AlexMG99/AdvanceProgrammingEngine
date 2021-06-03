@@ -6,7 +6,6 @@ class WaterEffect {
 
 	void createBuffers(App* app);
 
-
 	void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
 	void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
 

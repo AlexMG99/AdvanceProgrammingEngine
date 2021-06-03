@@ -198,7 +198,6 @@ void Init(App* app)
     u32 mountainModel = LoadModel(app, "Mountain/mountain.obj");
     u32 waterModel = LoadModel(app, "Water/water.obj");
 
-
     app->quadModel = CreatePlane(app);
     app->cubeModel =  CreateCube(app);
     
@@ -208,7 +207,7 @@ void Init(App* app)
     app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
     app->enviroment.CreateEnviromentFromTexture(app, app->textures[app->skyTexture]);
 
-    app->mode = Mode_TexturedQuad;
+    app->mode = Mode_WaterShader;
 
    // app->mode = Mode_WaterShader;
 
@@ -223,11 +222,11 @@ void Init(App* app)
     if (app->mode == Mode_WaterShader)
     {
         // Mountain and water assets
-        entity = Entity(vec3(0.0, 10.0, 0.0), mountainModel);
+        entity = Entity(vec3(0.0, 0.0, 0.0), mountainModel);
         app->entities.push_back(entity);
 
-        entity = Entity(vec3(0.0, 10.0, 0.0), waterModel);
-        app->entities.push_back(entity);
+        app->waterPlaneEntity = &Entity(vec3(20.0, 0.0, 0.0), waterModel);
+        app->entities.push_back(*app->waterPlaneEntity);
     }
     else
     {
@@ -399,7 +398,7 @@ void Render(App* app)
                 Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
                 texturedMeshProgram.Bind();
           
-                RenderScene(app, texturedMeshProgram);
+                RenderScene(app, *app->cam, texturedMeshProgram);
                 
                 //Model& cubeModel = app->models[app->cubeModel];
                 //cubeModel.Render(app, texturedMeshProgram);
@@ -466,7 +465,12 @@ void Render(App* app)
             break;
         case Mode_WaterShader:
             {
-                PassWaterScene(app, WaterScenePart::Refraction);
+                Camera refractionCamera = *app->cam;
+                refractionCamera.position.y = -refractionCamera.position.y;
+                refractionCamera.rotation.x = -refractionCamera.rotation.x;
+                refractionCamera.CalculateProjViewMatrix();
+
+                PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
 
             }
         break;
@@ -478,7 +482,7 @@ void Render(App* app)
 }
 
 
-void PassWaterScene(App* app, WaterScenePart part)
+void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -493,8 +497,9 @@ void PassWaterScene(App* app, WaterScenePart part)
 
     Program& clippingShader = app->programs[app->clippingProgramIdx];
     clippingShader.Bind();
-    clippingShader.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
-    clippingShader.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
+    clippingShader.glUniformMatrix4("uWorlViewProjectionMatrix", camera.projViewMatrix);
+    clippingShader.glUniformMatrix4("uWorldMatrix", camera.viewMatrix);
+    clippingShader.glUniformInt("planeY", app->waterPlaneEntity->pos.y);
 
     if (part == WaterScenePart::Reflection)
     {
@@ -505,7 +510,7 @@ void PassWaterScene(App* app, WaterScenePart part)
         clippingShader.glUniformVec4("clippingPlane", glm::vec4(0, -1, 0, 0));
     }
 
-    RenderScene(app, clippingShader);
+    RenderScene(app, camera, clippingShader);
 
     glUnmapBuffer(GL_UNIFORM_BUFFER);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -571,7 +576,7 @@ void Model::Render(App* app, Program& program)
     }
 }
 
-void RenderScene(App* app, Program& program)
+void RenderScene(App* app, Camera cam, Program& program)
 {
     glBindBuffer(GL_UNIFORM_BUFFER, app->cbuffer.handle);
     app->cbuffer.head = 0;
@@ -583,7 +588,7 @@ void RenderScene(App* app, Program& program)
         AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
         Entity& entity = app->entities[i];
         glm::mat4    world = entity.worldMatrix;
-        glm::mat4    worldViewProjection = app->cam->projViewMatrix * entity.worldMatrix;
+        glm::mat4    worldViewProjection = cam.projViewMatrix * entity.worldMatrix;
 
         entity.localParamsOffset = app->cbuffer.head;
         PushMat4(app->cbuffer, world);

@@ -523,9 +523,7 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 
     Program& clippingShader = app->programs[app->clippingProgramIdx];
     clippingShader.Bind();
-    clippingShader.glUniformMatrix4("uWorlViewProjectionMatrix", app->cam->projViewMatrix);
     clippingShader.glUniformMatrix4("viewMatrixReflection", camera.viewMatrix);
-    clippingShader.glUniformInt("planeY", app->waterEffect.waterPlaneEntity->pos.y);
 
     if (part == WaterScenePart::Reflection)
     {
@@ -594,6 +592,7 @@ void Model::Render(App* app, Program& program)
     Mesh& meshQuad = app->meshes[this->meshIdx];
     for (u32 i = 0; i < meshQuad.submeshes.size(); ++i)
     {
+       
         GLuint vao = FindVAO(meshQuad, i, program);
         glBindVertexArray(vao);
 

@@ -625,7 +625,7 @@ void RenderInGBuffer(App* app)
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-   // RenderSkybox(app);
+    RenderSkybox(app);
 
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     texturedMeshProgram.Bind();
@@ -657,7 +657,7 @@ void RenderWater(App* app)
     waterShader.Bind();
 
     waterShader.glUniformMatrix4("projectionMatrix", app->cam->projMatrix);
-    waterShader.glUniformMatrix4("worldViewMatrix",  app->waterEffect.waterPlaneEntity->worldMatrix * app->cam->viewMatrix);
+    waterShader.glUniformMatrix4("worldViewMatrix", app->cam->viewMatrix * app->waterEffect.waterPlaneEntity->worldMatrix);
     waterShader.glUniformVec2("viewportSize", app->displaySize);
     waterShader.glUniformMatrix4("modelViewMatrix", app->cam->viewMatrix); // TODO later model Matrix?
     waterShader.glUniformMatrix4("viewMatrixInv", glm::inverse(app->cam->viewMatrix));

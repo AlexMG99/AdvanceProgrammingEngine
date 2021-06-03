@@ -16,7 +16,7 @@ layout(location=2) in vec2 aTexCoord;
 
 uniform mat4 viewMatrixReflection;
 uniform mat4 uWorlViewProjectionMatrix;
-
+uniform vec4 clippingPlane;
 
 out vec2 vTexCoord;
 out vec4 vPosition;
@@ -25,33 +25,25 @@ void main()
 {
 	vTexCoord	= aTexCoord;
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
+	gl_ClipDistance[0] = dot(vec4(aPosition, 1.0), clippingPlane);
 	vPosition = vec4(aPosition, 1.0);
 }
 
-#elif defined(FRAGMENT) ///////////////////////////////////////////////
-out vec4 gDifusse;		
+#elif defined(FRAGMENT) ///////////////////////////////////////////////	
 
 in vec2 vTexCoord;
 in vec4 vPosition;
 
-uniform vec4 clippingPlane;
 uniform int hasTexture;
 uniform int planeY;
 
 uniform vec3 color;
 uniform sampler2D uTexture;
 
+layout (location = 0) out vec4 gDifusse;
+
 void main()
 {
-	if(clippingPlane.y == -1 && vPosition.y < 0)
-	{
-		discard;
-	}
-	else if(clippingPlane.y == 1 && vPosition.y > 0)
-	{
-		discard;
-	}
-
 	if(hasTexture == 1)
 		gDifusse = texture(uTexture, vTexCoord);
 	else

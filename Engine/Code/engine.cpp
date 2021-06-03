@@ -463,6 +463,7 @@ void Render(App* app)
                
                 glUnmapBuffer(GL_UNIFORM_BUFFER);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
                 
             }
             break;
@@ -474,7 +475,27 @@ void Render(App* app)
                 refractionCamera.CalculateProjViewMatrix();
 
                 PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
-                //PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
+
+                PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                glClearColor(0.f, 0.f, 0.f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                Model& modelQuad = app->models[app->quadModel];
+
+                Program& simpleShader = app->programs[app->simpleProgramIdx];
+                simpleShader.Bind();
+
+                simpleShader.glUniformInt("tex", 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtRefraction);
+
+                modelQuad.Render(app, simpleShader);
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
             }
         break;
 
@@ -487,7 +508,10 @@ void Render(App* app)
 
 void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if(part == WaterScenePart::Reflection)
+        glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboReflection);
+    else
+        glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboRefraction);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CLIP_DISTANCE0);
@@ -630,7 +654,7 @@ void RenderScene(App* app, Camera cam, Program& program)
     }
 }
 
-void createBuffers(App* app, WaterShader wShader)
+void createBuffers(App* app, WaterShader& wShader)
 {
     // Create fboReflection
     glGenFramebuffers(1, &wShader.fboReflection);

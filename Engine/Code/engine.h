@@ -64,6 +64,19 @@ enum WaterScenePart {
     Refraction
 };
 
+struct WaterShader {
+
+    GLuint rtReflection = 0;
+    GLuint rtRefraction = 0;
+    GLuint rtReflectDepth = 0;
+    GLuint rtRefractDepth = 0;
+
+    unsigned int fboReflection;
+    unsigned int fboRefraction;
+
+    Entity* waterPlaneEntity;
+};
+
 struct OpenGLInfo
 {
     std::string version;
@@ -162,7 +175,8 @@ struct App
     std::vector<Program>    programs;
     std::vector<Entity>     entities;
 
-    Entity* waterPlaneEntity;
+    // Water
+    WaterShader waterEffect;
 
     // program indices
     u32 texturedGeometryProgramIdx;
@@ -249,4 +263,9 @@ u32 LoadTexture2D(App* app, const char* filepath);
 void InitGBuffer(App* app);
 
 void RenderScene(App* app, Camera camera, Program& program);
+
+// Water Shader
+void createBuffers(App* app, WaterShader wShader);
+void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
+void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer);
 

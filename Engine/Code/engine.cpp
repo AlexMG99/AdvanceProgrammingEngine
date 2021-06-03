@@ -176,6 +176,9 @@ void Init(App* app)
     glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+    // Generate water shader buffers texture
+    createBuffers(app, app->waterEffect);
+
     // Create Camera
     app->cam = new Camera(60.0f, 0.1f, 1000.0f, (float)(app->displaySize.x/app->displaySize.y));
 
@@ -225,8 +228,8 @@ void Init(App* app)
         entity = Entity(vec3(0.0, 0.0, 0.0), mountainModel);
         app->entities.push_back(entity);
 
-        app->waterPlaneEntity = new Entity(vec3(20.0, 0.0, 0.0), waterModel);
-        app->entities.push_back(*app->waterPlaneEntity);
+        app->waterEffect.waterPlaneEntity = new Entity(vec3(20.0, 0.0, 0.0), waterModel);
+        app->entities.push_back(*app->waterEffect.waterPlaneEntity);
     }
     else
     {
@@ -471,7 +474,7 @@ void Render(App* app)
                 refractionCamera.CalculateProjViewMatrix();
 
                 PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
-                PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
+                //PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
             }
         break;
 
@@ -499,7 +502,7 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
     clippingShader.Bind();
     clippingShader.glUniformMatrix4("uWorlViewProjectionMatrix", app->cam->projViewMatrix);
     clippingShader.glUniformMatrix4("viewMatrixReflection", camera.viewMatrix);
-    clippingShader.glUniformInt("planeY", 0);
+    clippingShader.glUniformInt("planeY", app->waterEffect.waterPlaneEntity->pos.y);
 
     if (part == WaterScenePart::Reflection)
     {
@@ -625,4 +628,55 @@ void RenderScene(App* app, Camera cam, Program& program)
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
         }
     }
+}
+
+void createBuffers(App* app, WaterShader wShader)
+{
+    // Create fboReflection
+    glGenFramebuffers(1, &wShader.fboReflection);
+    glBindFramebuffer(GL_FRAMEBUFFER, wShader.fboReflection);
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
+    glDrawBuffers(2, attachments);
+
+    // Assign textures
+    createTextureAttachment(app, wShader.rtReflection, wShader.fboReflection);
+    createDepthTextureAttachment(app, wShader.rtReflectDepth, wShader.fboReflection);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Create fboRefraction
+    glGenFramebuffers(1, &wShader.fboRefraction);
+    glBindFramebuffer(GL_FRAMEBUFFER, wShader.fboRefraction);
+    unsigned int attachments2[2] = { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT };
+    glDrawBuffers(2, attachments2);
+
+    // Assign textures
+    createTextureAttachment(app, wShader.rtRefraction, wShader.fboRefraction);
+    createDepthTextureAttachment(app, wShader.rtRefractDepth, wShader.fboRefraction);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void createTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
+{
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboBuffer, 0);
+}
+
+void createDepthTextureAttachment(App* app, GLuint id, unsigned int fboBuffer)
+{
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fboBuffer, 0);
 }

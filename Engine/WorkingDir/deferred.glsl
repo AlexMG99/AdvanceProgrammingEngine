@@ -97,6 +97,11 @@ vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
 void main()
 {	if(renderMode == 0)
 	{
+		if(texture(gDiffuse, vTexCoord).a == 0.0)
+		{
+			discard;
+		};
+		
 	vec3 vPosition = texture(gPosition, vTexCoord).xyz;
 	vec3 vViewDir	= normalize(uCameraPosition - vPosition);
 

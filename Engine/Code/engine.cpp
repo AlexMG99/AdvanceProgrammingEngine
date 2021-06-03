@@ -232,7 +232,7 @@ void Init(App* app)
         entity = Entity(vec3(0.0, 0.0, 0.0), mountainModel);
         app->entities.push_back(entity);
 
-        app->waterEffect.waterPlaneEntity = new Entity(vec3(20.0, 0.0, 0.0), waterModel);
+        app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), waterModel);
         //app->entities.push_back(*app->waterEffect.waterPlaneEntity);
     }
     else
@@ -428,6 +428,8 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    RenderSkybox(app, &camera);
 
     Program& clippingShader = app->programs[app->clippingProgramIdx];
     clippingShader.Bind();
@@ -625,7 +627,7 @@ void RenderInGBuffer(App* app)
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-    RenderSkybox(app);
+    RenderSkybox(app, app->cam);
 
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     texturedMeshProgram.Bind();
@@ -635,13 +637,13 @@ void RenderInGBuffer(App* app)
     RenderWater(app);
 }
 
-void RenderSkybox(App* app)
+void RenderSkybox(App* app, Camera*  cam)
 {
     glDisable(GL_DEPTH_TEST);
     Program& skyProgram = app->programs[app->skyboxProgramId];
     skyProgram.Bind();
-    skyProgram.glUniformMatrix4("projection", app->cam->projMatrix);
-    skyProgram.glUniformMatrix4("view", app->cam->viewMatrix);
+    skyProgram.glUniformMatrix4("projection", cam->projMatrix);
+    skyProgram.glUniformMatrix4("view", cam->viewMatrix);
 
     app->enviroment.BindEnviroment(0);
 

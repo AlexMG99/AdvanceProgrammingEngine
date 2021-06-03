@@ -273,7 +273,7 @@ void createDepthTextureAttachment(App* app, GLuint& id, unsigned int fboBuffer);
 
 void RenderInGBuffer(App* app);
 
-void RenderSkybox(App* app);
+void RenderSkybox(App* app, Camera* cam);
 
 void RenderWater(App* app);
 

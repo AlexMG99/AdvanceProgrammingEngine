@@ -254,10 +254,9 @@ void Init(App* app)
     InitGBuffer(app);
 
     // Create Light
-    Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(-0.2, -0.5,0 ), vec3(10, 10, 10));
-    app->lights.push_back(light);
+    app->sun = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
+    app->lights.push_back(app->sun);
     
-
     //light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
     //app->lights.push_back(light);
     //entity = Entity(vec3(10, 10, 10), sphereID);
@@ -665,6 +664,9 @@ void RenderWater(App* app)
     waterShader.glUniformMatrix4("viewMatrixInv", glm::inverse(app->cam->viewMatrix));
     waterShader.glUniformMatrix4 ("projectionMatrixInv", glm::inverse(app->cam->projMatrix));
 
+    waterShader.glUniformVec3("lightPosition", app->sun.position);
+    waterShader.glUniformVec3("camPosition", app->cam->position);
+
     waterShader.glUniformInt("reflectionMap", 0);
     waterShader.glUniformInt("refractionMap", 1);
     waterShader.glUniformInt("reflectionDepth", 2);
@@ -674,7 +676,7 @@ void RenderWater(App* app)
 
     waterShader.glUniformFloat("time", app->time);
 
-    app->time += app->deltaTime * 0.5;
+    app->time += app->deltaTime * 0.25;
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflection);

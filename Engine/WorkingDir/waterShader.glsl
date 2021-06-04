@@ -15,12 +15,17 @@ uniform mat4 projectionMatrix;
 uniform mat4 uWorldMatrix;
 uniform mat4 worldViewMatrix;
 
+uniform vec3 lightPosition;
+uniform vec3 camPosition;
+
+out vec3 fromLightVector;
+out vec3 toCameraVector;
+
 out Data
 {
 	vec3 positionViewspace;
 	vec3 normalViewspace;
 
-	
 	vec3 vNormal;
 	vec3 vPosition;
 
@@ -34,6 +39,9 @@ void main()
 	VSOut.vPosition = vec3(uWorldMatrix * vec4(position, 1.0));
 	VSOut.vNormal = normalize(mat3(transpose(inverse(uWorldMatrix))) * normal);
 	gl_Position = projectionMatrix * worldViewMatrix  * vec4(position, 1.0);
+
+	toCameraVector = camPosition - VSOut.vPosition;
+	fromLightVector = VSOut.vPosition - lightPosition;
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
@@ -51,6 +59,8 @@ uniform sampler2D dudvMap;
 
 uniform float time;
 
+vec3 lightColor = vec3(1.0, 1.0, 1.0);
+
 in Data
 {
 	vec3 positionViewspace;
@@ -59,6 +69,11 @@ in Data
 	vec3 vNormal;
 	vec3 vPosition;
 } FSIn;
+
+in vec3 fromLightVector;
+in vec3 toCameraVector;
+const float shineDamper = 20.0;
+const float reflectivity = 0.6;
 
 layout (location = 0) out vec4 gDifusse;		
 layout (location = 1) out vec4 gNormal;		
@@ -92,10 +107,20 @@ void main()
 	vec2 distortion = (2.0 * texture(dudvMap, (Pw.xz + waveMovement) / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;
 
 	// Distorted reflection and refraction
-	vec2 reflectionTexCoord = vec2(texCoord.s, 1.0 - texCoord.t) + distortion ;
+	vec2 reflectionTexCoord = vec2(texCoord.s, 1.0 - texCoord.t) + distortion;
 	vec2 refractionTexCoord = texCoord + distortion;
 	vec3 reflectionColor = texture(reflectionMap, reflectionTexCoord).rgb;
 	vec3 refractionColor = texture(refractionMap, refractionTexCoord).rgb;
+
+	// Highlight
+	vec4 normalMapColour = texture(normalMap, distortion);
+	vec3 normalCol = vec3(normalMapColour.r * 2.0 - 1.0, normalMapColour.b, normalMapColour.g * 2.0 - 1.0);
+	normalCol = normalize(normalCol);
+
+	vec3 reflectedLight = reflect(normalize(fromLightVector), normalCol);
+	float specular = max(dot(reflectedLight, normalize(toCameraVector)), 0.0);
+	specular = pow(specular, shineDamper);
+	vec3 specularHighlights = lightColor * specular * reflectivity;
 
 	// Water tint
 	float distortedGroundDepth = texture(refractionDepth, refractionTexCoord).x;
@@ -110,7 +135,8 @@ void main()
 	vec3 F = fresnelSchlick(max(0.0, dot(V, N)), F0);
 	gDifusse.rgb = mix(refractionColor, reflectionColor, F);
 	gDifusse.a = 1.0;
-
+	gDifusse += vec4(specularHighlights, 0.0);
+	//gDifusse = vec4(specularHighlights, 1.0);
 	gNormal = vec4(FSIn.vNormal,1.0);
 	gPosition = vec4(FSIn.vPosition, 1.0);
 }

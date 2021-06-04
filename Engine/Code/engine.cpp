@@ -100,10 +100,12 @@ void InitGBuffer(App* app)
     Program& geometryProgram = app->programs[app->lightingPassProgram];
    
     geometryProgram.Bind();
-    geometryProgram.glUniformInt("gDiffuse", 0);
-    geometryProgram.glUniformInt("gNormal", 1);
-    geometryProgram.glUniformInt("gDepth", 2);
-    geometryProgram.glUniformInt("gPosition", 3);
+    geometryProgram.glUniformInt("environmentMap", 0);
+    geometryProgram.glUniformInt("gDiffuse", 1);
+    geometryProgram.glUniformInt("gNormal", 2);
+    geometryProgram.glUniformInt("gDepth", 3);
+    geometryProgram.glUniformInt("gPosition", 4);
+
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
@@ -233,13 +235,12 @@ void Init(App* app)
 
     app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
 
-    if (app->mode == Mode_WaterShader)
-    {
-       
-       
-    }
-    else
-    {
+    //light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
+  //app->lights.push_back(light);
+    entity = Entity(vec3(3, 2, 3), sphereID);
+    app->entities.push_back(entity);
+  //
+
        // entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
        // entity.Rotate(0, -30, 0);
        // app->entities.push_back(entity);
@@ -249,7 +250,6 @@ void Init(App* app)
        // app->entities.push_back(entity);
        //
        // app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
-    }
 
     InitGBuffer(app);
 
@@ -263,11 +263,7 @@ void Init(App* app)
     //entity = Entity(vec3(10, 10, 10), sphereID);
     //app->entities.push_back(entity);
     //
-    //light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
-    //app->lights.push_back(light);
-    //entity = Entity(vec3(3, 2, 3), sphereID);
-    //app->entities.push_back(entity);
-    //
+  
     //light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
     //app->lights.push_back(light);
     //entity = Entity(vec3(-5, 5, 0), sphereID);
@@ -312,7 +308,7 @@ void Gui(App* app)
 
     // Todo apply changes to camera when properties modified
 
-    const char* items[] = { "Final", "Normal", "Depth", "Position"};
+    const char* items[] = { "Final", "Normal", "Depth", "Position", "Reflection"};
     ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
 
     ImGui::Separator();
@@ -738,18 +734,23 @@ void LightingPass(App* app)
     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
     lightingProgram.glUniformInt("renderMode", app->renderMode);
+    lightingProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
+    app->enviroment.BindEnviroment(0);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, app->gNormals);
+    glBindTexture(GL_TEXTURE_2D, app->gDiffuse);
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, app->gDepth);
+    glBindTexture(GL_TEXTURE_2D, app->gNormals);
 
     glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, app->gDepth);
+
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, app->gPosition);
+    
+   
 
     Model& modelQuad = app->models[app->quadModel];
     modelQuad.Render(app, lightingProgram);

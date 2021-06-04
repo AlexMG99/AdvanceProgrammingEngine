@@ -30,7 +30,10 @@ uniform sampler2D gDiffuse;
 uniform sampler2D gNormal;
 uniform sampler2D gDepth;
 uniform sampler2D gPosition;
+uniform samplerCube environmentMap; 
+uniform mat4 viewMatrix;
 uniform int renderMode;
+
 
 layout(binding = 1, std140) uniform GlobalParams
 {
@@ -124,17 +127,35 @@ void main()
 	}
 	else if(renderMode ==1)
 	{
-	oColor = texture(gNormal, vTexCoord);
+		oColor = texture(gNormal, vTexCoord);
 	}
+
 	else if(renderMode ==2)
 	{
 		oColor.xyz = vec3(LinearizeDepth(vTexCoord));
 		//oColor.xyz = normalize(oColor.xyz);
 		oColor.w =1.0;
 	}
-	else
-	{
+
+	else if (renderMode == 3){
 		oColor = texture(gPosition, vTexCoord);
+	}
+	else if (renderMode == 4)
+	{
+		if(texture(gDiffuse, vTexCoord).a == 0.0)
+		{
+			discard;
+		};
+
+		vec3 vPosition = texture(gPosition, vTexCoord).xyz;
+		vec3 vViewDir	= normalize(uCameraPosition - vPosition);
+		vec3 viewDir = normalize(vViewDir - vPosition);
+		vec3 V	= normalize(vPosition - uCameraPosition);
+		vec3 N = normalize(texture(gNormal, vTexCoord).xyz);
+
+		vec3 viewPos = vec3(viewMatrix * vec4(vPosition, 1.0));
+		oColor.rgb = texture(environmentMap, reflect(-vViewDir, N)).xyz;
+		oColor.a = 1.0;
 	}
 	//oColor = vec4(1.0,0.0,0.0,1.0);
 }

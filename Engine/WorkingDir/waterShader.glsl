@@ -49,6 +49,8 @@ uniform sampler2D refractionDepth;
 uniform sampler2D normalMap;
 uniform sampler2D dudvMap;
 
+uniform float time;
+
 in Data
 {
 	vec3 positionViewspace;
@@ -82,14 +84,15 @@ void main()
 	vec3 Pw = vec3(viewMatrixInv * vec4(FSIn.positionViewspace, 1.0));
 	vec2 texCoord = gl_FragCoord.xy / viewportSize;
 
-	const vec2 waveLength = vec2(2.0);
-	const vec2 waveStrength = vec2(0.01);
-	const float turbidityDistance = 0.5;
+	const vec2 waveLength = vec2(1.0);
+	const vec2 waveStrength = vec2(0.02);
+	const float turbidityDistance = 2.5;
 
-	vec2 distortion = (2.0 * texture(dudvMap, Pw.xz / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;
+	vec2 waveMovement = vec2(time, time * 0.5);
+	vec2 distortion = (2.0 * texture(dudvMap, (Pw.xz + waveMovement) / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;
 
 	// Distorted reflection and refraction
-	vec2 reflectionTexCoord = vec2(texCoord.s, 1.0 - texCoord.t) + distortion;
+	vec2 reflectionTexCoord = vec2(texCoord.s, 1.0 - texCoord.t) + distortion ;
 	vec2 refractionTexCoord = texCoord + distortion;
 	vec3 reflectionColor = texture(reflectionMap, reflectionTexCoord).rgb;
 	vec3 refractionColor = texture(refractionMap, refractionTexCoord).rgb;
@@ -98,7 +101,7 @@ void main()
 	float distortedGroundDepth = texture(refractionDepth, refractionTexCoord).x;
 	vec3 distortedGroundPosViewspace = reconstructPixelPosition(distortedGroundDepth);
 	float distortedWaterDepth = FSIn.positionViewspace.z - distortedGroundPosViewspace.z;
-	float tintFactor= clamp(distortedWaterDepth / turbidityDistance, 0.0, 1.0);
+	float tintFactor = clamp(distortedWaterDepth / turbidityDistance, 0.0, 1.0);
 	vec3 waterColor = vec3(0.25, 0.4, 0.6);
 	refractionColor = mix(refractionColor, waterColor, tintFactor);
 

@@ -19,12 +19,20 @@ out Data
 {
 	vec3 positionViewspace;
 	vec3 normalViewspace;
+
+	
+	vec3 vNormal;
+	vec3 vPosition;
+
 } VSOut;
 
 void main()
 {
-	VSOut.positionViewspace = vec3(uWorldMatrix * vec4(position, 1.0));
-	VSOut.normalViewspace = mat3(transpose(inverse(uWorldMatrix))) * normal;
+	VSOut.positionViewspace = vec3(worldViewMatrix * vec4(position, 1.0));
+    VSOut.normalViewspace = vec3(worldViewMatrix * vec4(normal, 0.0));
+
+	VSOut.vPosition = vec3(uWorldMatrix * vec4(position, 1.0));
+	VSOut.vNormal = normalize(mat3(transpose(inverse(uWorldMatrix))) * normal);
 	gl_Position = projectionMatrix * worldViewMatrix  * vec4(position, 1.0);
 }
 
@@ -45,6 +53,9 @@ in Data
 {
 	vec3 positionViewspace;
 	vec3 normalViewspace;
+
+	vec3 vNormal;
+	vec3 vPosition;
 } FSIn;
 
 layout (location = 0) out vec4 gDifusse;		
@@ -72,7 +83,7 @@ void main()
 	vec2 texCoord = gl_FragCoord.xy / viewportSize;
 
 	const vec2 waveLength = vec2(2.0);
-	const vec2 waveStrength = vec2(0.00);
+	const vec2 waveStrength = vec2(0.01);
 	const float turbidityDistance = 10.0;
 
 	vec2 distortion = (2.0 * texture(dudvMap, Pw.xz / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;
@@ -97,8 +108,8 @@ void main()
 	gDifusse.rgb = mix(refractionColor, reflectionColor, F);
 	gDifusse.a = 1.0;
 
-	gNormal = vec4(N, 1.0);
-	gPosition = vec4(FSIn.positionViewspace,1.0);
+	gNormal = vec4(FSIn.vNormal,1.0);
+	gPosition = vec4(FSIn.vPosition, 1.0);
 	
 }
 

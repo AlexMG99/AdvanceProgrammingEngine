@@ -229,10 +229,10 @@ void Init(App* app)
     if (app->mode == Mode_WaterShader)
     {
         // Mountain and water assets
-        entity = Entity(vec3(0.0, 0.0, 0.0), mountainModel);
+        entity = Entity(vec3(0.0, -0.2, 0.0), mountainModel);
         app->entities.push_back(entity);
 
-        app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), waterModel);
+        app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
         //app->entities.push_back(*app->waterEffect.waterPlaneEntity);
     }
     else

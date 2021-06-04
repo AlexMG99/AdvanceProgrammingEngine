@@ -398,7 +398,7 @@ void Render(App* app)
 
                 PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
 
-                PassWaterScene(app, refractionCamera, WaterScenePart::Refraction);
+                PassWaterScene(app, *app->cam, WaterScenePart::Refraction);
 
                 RenderInGBuffer(app);
 

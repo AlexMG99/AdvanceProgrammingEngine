@@ -157,6 +157,8 @@ struct App
 {
     // Loop
     f32  deltaTime;
+    float time = 0.0f;
+
     bool isRunning;
 
     // Input

@@ -678,6 +678,10 @@ void RenderWater(App* app)
     waterShader.glUniformInt("normalMap", 4);
     waterShader.glUniformInt("dudvMap", 5);
 
+    waterShader.glUniformFloat("time", app->time);
+
+    app->time += app->deltaTime * 0.5;
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, app->waterEffect.rtReflection);
     glActiveTexture(GL_TEXTURE1);

@@ -72,7 +72,7 @@ void main()
 	vec2 texCoord = gl_FragCoord.xy / viewportSize;
 
 	const vec2 waveLength = vec2(2.0);
-	const vec2 waveStrength = vec2(0.05);
+	const vec2 waveStrength = vec2(0.00);
 	const float turbidityDistance = 10.0;
 
 	vec2 distortion = (2.0 * texture(dudvMap, Pw.xz / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;

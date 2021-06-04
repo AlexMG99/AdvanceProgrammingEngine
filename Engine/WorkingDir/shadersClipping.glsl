@@ -21,6 +21,7 @@ layout(binding = 0, std140) uniform LocalParams
 	mat4 uWorlViewProjectionMatrix;
 };
 
+uniform mat4 uViewMatrix;
 uniform vec4 clippingPlane;
 
 out vec2 vTexCoord;
@@ -28,10 +29,17 @@ out vec4 vPosition;
 
 void main()
 {
-	vTexCoord	= aTexCoord;
-	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
-	gl_ClipDistance[0] = dot(vec4(aPosition, 1.0), clippingPlane);
-	vPosition = vec4(aPosition, 1.0);
+	vTexCoord    = aTexCoord;
+    gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
+
+	vec4 positionWorldspace = uWorldMatrix * vec4(aPosition, 1.0);
+    positionWorldspace.w = 1.0;
+
+    vec4 positionViewspace =  uViewMatrix  * positionWorldspace;
+    vec4 clipDistanceDisplacement = vec4(0.0, 0.0, 0.0, length(positionViewspace) / 100.0);
+
+    gl_ClipDistance[0] = dot(positionWorldspace, clippingPlane + clipDistanceDisplacement);
+    vPosition = vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////	

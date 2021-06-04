@@ -255,20 +255,20 @@ void Init(App* app)
     app->lights.push_back(light);
     
 
-    light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
-    app->lights.push_back(light);
-    entity = Entity(vec3(10, 10, 10), sphereID);
-    app->entities.push_back(entity);
-    
-    light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
-    app->lights.push_back(light);
-    entity = Entity(vec3(3, 2, 3), sphereID);
-    app->entities.push_back(entity);
-    
-    light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
-    app->lights.push_back(light);
-    entity = Entity(vec3(-5, 5, 0), sphereID);
-    app->entities.push_back(entity);
+    //light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
+    //app->lights.push_back(light);
+    //entity = Entity(vec3(10, 10, 10), sphereID);
+    //app->entities.push_back(entity);
+    //
+    //light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
+    //app->lights.push_back(light);
+    //entity = Entity(vec3(3, 2, 3), sphereID);
+    //app->entities.push_back(entity);
+    //
+    //light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
+    //app->lights.push_back(light);
+    //entity = Entity(vec3(-5, 5, 0), sphereID);
+    //app->entities.push_back(entity);
 }
 
 void Gui(App* app)
@@ -416,9 +416,14 @@ void Render(App* app)
 void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 {
     if(part == WaterScenePart::Reflection)
+    {
         glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboReflection);
+
+    }
     else
+    {
         glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboRefraction);
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CLIP_DISTANCE0);
@@ -433,7 +438,7 @@ void PassWaterScene(App* app, Camera camera, WaterScenePart part)
 
     Program& clippingShader = app->programs[app->clippingProgramIdx];
     clippingShader.Bind();
-    clippingShader.glUniformMatrix4("viewMatrixReflection", camera.viewMatrix);
+    clippingShader.glUniformMatrix4("uViewMatrix", camera.viewMatrix);
 
     if (part == WaterScenePart::Reflection)
     {

@@ -38,6 +38,7 @@ enum LightType
 
 struct Light
 {
+    Light() {};
     Light(LightType t, vec3 c, vec3 d, vec3 p)
     {
         type = t;
@@ -234,6 +235,9 @@ struct App
 
     //Enviroments
     Enviroment enviroment;
+
+    // Light Sun
+    Light sun;
 
     //
     u32     globalParamsOffset;

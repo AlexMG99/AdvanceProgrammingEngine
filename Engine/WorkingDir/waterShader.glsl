@@ -139,7 +139,6 @@ void main()
 	//gDifusse = vec4(specularHighlights, 1.0);
 	gNormal = vec4(FSIn.vNormal,1.0);
 	gPosition = vec4(FSIn.vPosition, 1.0);
-	
 }
 
 #endif

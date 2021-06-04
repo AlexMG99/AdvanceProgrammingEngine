@@ -216,7 +216,9 @@ int main()
 
     GlobalFrameArenaMemory = (u8*)malloc(GLOBAL_FRAME_ARENA_SIZE);
 
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     Init(&app);
+
 
     InitOpenGLInfo(&app);
 

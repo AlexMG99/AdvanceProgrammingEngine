@@ -208,13 +208,14 @@ void Init(App* app)
     app->bakeCubeMapProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
     app->simpleProgramIdx = LoadProgram(app, "Simple.glsl", "");
     app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
+    //app->skyTexture = LoadTexture2D(app, "kloppenheim_05_4k.hdr");
     app->enviroment.CreateEnviromentFromTexture(app, app->textures[app->skyTexture]);
 
     //Textures ==
     app->normalWaterIdx = LoadTexture2D(app, "Water/normalMap.png");
     app->dudvWaterIdx = LoadTexture2D(app, "Water/waterDUDV.png");
 
-    app->mode = Mode_WaterShader;
+    app->mode = Mode::Mode_WaterShader;
 
    // app->mode = Mode_WaterShader;
 
@@ -226,32 +227,34 @@ void Init(App* app)
     //entity.Rotate(0, -30, 0);
     //app->entities.push_back(entity);
 
+     // Mountain and water assets
+    entity = Entity(vec3(0.0, -0.2, 0.0), mountainModel);
+    app->entities.push_back(entity);
+
+    app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
+
     if (app->mode == Mode_WaterShader)
     {
-        // Mountain and water assets
-        entity = Entity(vec3(0.0, -0.2, 0.0), mountainModel);
-        app->entities.push_back(entity);
-
-        app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
-        //app->entities.push_back(*app->waterEffect.waterPlaneEntity);
+       
+       
     }
     else
     {
-        entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
-        entity.Rotate(0, -30, 0);
-        app->entities.push_back(entity);
-
-        entity = Entity(vec3(-4.0, 0.0, 3.0), patrickID);
-        entity.Rotate(0, 30, 0);
-        app->entities.push_back(entity);
-
-        app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
+       // entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
+       // entity.Rotate(0, -30, 0);
+       // app->entities.push_back(entity);
+       //
+       // entity = Entity(vec3(-4.0, 0.0, 3.0), patrickID);
+       // entity.Rotate(0, 30, 0);
+       // app->entities.push_back(entity);
+       //
+       // app->entities.push_back(Entity(vec3(0.0, -4.0, 2.5), planeID));
     }
 
     InitGBuffer(app);
 
     // Create Light
-    Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
+    Light light = Light(LightType_Directional, vec3(1.0,1,1), vec3(-0.2, -0.5,0 ), vec3(10, 10, 10));
     app->lights.push_back(light);
     
 
@@ -391,14 +394,9 @@ void Render(App* app)
         case Mode_WaterShader:
             {
 
-                Camera refractionCamera = *app->cam;
-                refractionCamera.position.y = -refractionCamera.position.y;
-                refractionCamera.rotation.x = -refractionCamera.rotation.x;
-                refractionCamera.CalculateProjViewMatrix();
+                PassWaterScene(app, WaterScenePart::Reflection);
 
-                PassWaterScene(app, refractionCamera, WaterScenePart::Reflection);
-
-                PassWaterScene(app, *app->cam, WaterScenePart::Refraction);
+                PassWaterScene(app, WaterScenePart::Refraction);
 
                 RenderInGBuffer(app);
 
@@ -413,17 +411,19 @@ void Render(App* app)
 }
 
 
-void PassWaterScene(App* app, Camera camera, WaterScenePart part)
+void PassWaterScene(App* app, WaterScenePart part)
 {
+    Camera camera = *app->cam;
     if(part == WaterScenePart::Reflection)
     {
+        camera.position.y = -camera.position.y;
+        camera.rotation.x = -camera.rotation.x;
+        camera.CalculateProjViewMatrix();
         glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboReflection);
 
     }
     else
-    {
         glBindFramebuffer(GL_FRAMEBUFFER, app->waterEffect.fboRefraction);
-    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CLIP_DISTANCE0);
@@ -631,8 +631,6 @@ void RenderInGBuffer(App* app)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-   
 
     Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     texturedMeshProgram.Bind();

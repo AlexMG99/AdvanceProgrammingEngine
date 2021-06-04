@@ -84,7 +84,7 @@ void main()
 
 	const vec2 waveLength = vec2(2.0);
 	const vec2 waveStrength = vec2(0.01);
-	const float turbidityDistance = 10.0;
+	const float turbidityDistance = 0.5;
 
 	vec2 distortion = (2.0 * texture(dudvMap, Pw.xz / waveLength).rg - vec2(1.0)) * waveStrength + waveStrength/7;
 
@@ -103,14 +103,13 @@ void main()
 	refractionColor = mix(refractionColor, waterColor, tintFactor);
 
 	// Fresnel
-	vec3 F0 = vec3(0.1);
+	vec3 F0 = vec3(0.5);
 	vec3 F = fresnelSchlick(max(0.0, dot(V, N)), F0);
 	gDifusse.rgb = mix(refractionColor, reflectionColor, F);
 	gDifusse.a = 1.0;
 
 	gNormal = vec4(FSIn.vNormal,1.0);
 	gPosition = vec4(FSIn.vPosition, 1.0);
-	
 }
 
 #endif

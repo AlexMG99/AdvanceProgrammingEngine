@@ -258,7 +258,7 @@ void Update(App* app);
 
 void Render(App* app);
 
-void PassWaterScene(App* app, Camera camera, WaterScenePart part);
+void PassWaterScene(App* app, WaterScenePart part);
 
 u32 LoadTexture2D(App* app, const char* filepath);
 

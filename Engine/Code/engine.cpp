@@ -100,11 +100,12 @@ void InitGBuffer(App* app)
     Program& geometryProgram = app->programs[app->lightingPassProgram];
    
     geometryProgram.Bind();
-    geometryProgram.glUniformInt("environmentMap", 0);
     geometryProgram.glUniformInt("gDiffuse", 1);
     geometryProgram.glUniformInt("gNormal", 2);
     geometryProgram.glUniformInt("gDepth", 3);
     geometryProgram.glUniformInt("gPosition", 4);
+    geometryProgram.glUniformInt("environmentMap", 0);
+    geometryProgram.glUniformInt("irradianceMap", 5);
 
 }
 
@@ -206,9 +207,10 @@ void Init(App* app)
     app->quadModel = CreatePlane(app);
     app->cubeModel =  CreateCube(app);
     
-    GenerateEnviromentCaptureFrames(app);
+  
     app->bakeCubeMapProgram = LoadProgram(app, "hdrToCubemap.glsl", "");
     app->simpleProgramIdx = LoadProgram(app, "Simple.glsl", "");
+    app->irradianceShaderIdx = LoadProgram(app, "Convolution.glsl", "");
     app->skyTexture = LoadTexture2D(app, "kiara_1_dawn_1k.hdr");
     //app->skyTexture = LoadTexture2D(app, "kloppenheim_05_4k.hdr");
     app->enviroment.CreateEnviromentFromTexture(app, app->textures[app->skyTexture]);
@@ -257,12 +259,12 @@ void Init(App* app)
     app->sun = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
     app->lights.push_back(app->sun);
     
-    //light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
+    //Light light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
     //app->lights.push_back(light);
     //entity = Entity(vec3(10, 10, 10), sphereID);
     //app->entities.push_back(entity);
     //
-  
+    //
     //light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
     //app->lights.push_back(light);
     //entity = Entity(vec3(-5, 5, 0), sphereID);
@@ -309,6 +311,10 @@ void Gui(App* app)
 
     const char* items[] = { "Final", "Normal", "Depth", "Position", "Reflection"};
     ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
+    const char* skyboxType[] = { "Skybox 01" , "Skybox 01 Irradiance" };
+    ImGui::Combo("Skybox type", &app->skyboxIdx, skyboxType, IM_ARRAYSIZE(skyboxType));
+    ImGui::DragFloat("F0: ", &app->F0, 0.1,0.0,1.0);
+    ImGui::DragFloat("Roughness: ", &app->roughness, 0.1, 0.0, 1.0);
 
     ImGui::Separator();
 
@@ -643,7 +649,15 @@ void RenderSkybox(App* app, Camera*  cam)
     skyProgram.glUniformMatrix4("projection", cam->projMatrix);
     skyProgram.glUniformMatrix4("view", cam->viewMatrix);
 
-    app->enviroment.BindEnviroment(0);
+    if (app->skyboxIdx ==0)
+    {
+        app->enviroment.BindEnviroment(0);
+
+    }
+    else
+    {
+        app->enviroment.BindIrradiaceMap(0);
+    }
 
     Model& cubeModel = app->models[app->cubeModel];
     cubeModel.Render(app, skyProgram);
@@ -737,8 +751,10 @@ void LightingPass(App* app)
 
     lightingProgram.glUniformInt("renderMode", app->renderMode);
     lightingProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
-
+    lightingProgram.glUniformVec3("F0", glm::vec3(app->F0));
+    lightingProgram.glUniformFloat("roughness", (app->roughness));
     app->enviroment.BindEnviroment(0);
+    app->enviroment.BindIrradiaceMap(5);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, app->gDiffuse);

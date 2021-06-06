@@ -30,10 +30,17 @@ uniform sampler2D gDiffuse;
 uniform sampler2D gNormal;
 uniform sampler2D gDepth;
 uniform sampler2D gPosition;
+
 uniform samplerCube environmentMap; 
+uniform samplerCube irradianceMap;
 uniform mat4 viewMatrix;
 uniform int renderMode;
 
+uniform float roughness= 1.0;
+uniform vec3 F0 = vec3(0.5);
+vec3 vPosition;
+vec3 V; // Camera to position
+const float PI = 3.14159265359;
 
 layout(binding = 1, std140) uniform GlobalParams
 {
@@ -49,6 +56,15 @@ float LinearizeDepth(vec2 uv)
   float z = texture2D(gDepth, uv).x;
   return (2.0 * n) / (f + n - z * (f - n));	
 }
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
+} 
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
+}  
 
 vec3 CalculateDirLight(Light light, vec3 normal, vec3 viewDir)
 {
@@ -62,12 +78,24 @@ vec3 CalculateDirLight(Light light, vec3 normal, vec3 viewDir)
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 
 	// Combine
-	vec3 ambient = 0.1 * vec3(texture(gDiffuse, vTexCoord)) * light.color;
+	vec3 ambient = 0.1 * texture(irradianceMap, reflect(-V, normal)).xyz * light.color;
 	vec3 diffuse = diff * vec3(texture(gDiffuse, vTexCoord)) * light.color;
 	vec3 specular = 0.5 * spec * light.color;
 
-	return (ambient + diffuse + specular);
+vec3 vPosition = texture(gPosition, vTexCoord).xyz;
+	vec3 V = normalize(uCameraPosition - vPosition);
+
+	float cosTheta = dot(normal, V);
+	cosTheta = smoothstep(roughness,1.0 , cosTheta);
+	vec3 endColor =  (ambient + diffuse + specular);
+	vec3 fresnel  = fresnelSchlick(cosTheta, vec3(F0));
+	//fresnel = fresnelSchlickRoughness(max(cosTheta, 0.0), vec3(F0), roughness); 
+	vec3 irradiance = texture(irradianceMap, reflect(-V, normal)).xyz;
+	//return vec3(fresnel);
+	return mix(endColor, irradiance , fresnel.x);
 }
+
+
 
 vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
@@ -91,10 +119,12 @@ vec3 CalculatePointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
     vec3 ambient  = 0.1  * vec3(texture(gDiffuse, vTexCoord)) * light.color;
     vec3 diffuse  = diff * vec3(texture(gDiffuse, vTexCoord)) * light.color;
     vec3 specular = 0.5 * spec * light.color;
+
     ambient  *= attenuation;
     diffuse  *= attenuation;
     specular *= attenuation;
     return (ambient + diffuse + specular);
+    
 }
 
 void main()

@@ -5,7 +5,7 @@
 struct TextureCube
 {
 	unsigned int handle; 
-	void Init();
+	void Init(int size);
 	void Bind(int i);
 };
 
@@ -17,12 +17,16 @@ class Enviroment : public Component
 public:
 	Enviroment();
 	~Enviroment();
-	void Init();
+	void Init(App* app);
 	void CreateEnviromentFromTexture(App* app, Texture& tex);
 	void BindEnviroment(int i = 0);
+	void BindIrradiaceMap(int i = 0);
+
 	virtual void HandleResourcesAboutToDie() override {};
 	//Texture* texture = nullptr;
 	bool isSetUp = false;
+
+private:
 	TextureCube enviromentMap;
 	TextureCube irradianceMap;
 };

@@ -126,14 +126,14 @@ void Program::Bind()
 
 void Program::glUniformInt(const char* name, int value)
 {
-    GLuint MatrixID = glGetUniformLocation(handle, name);
-    glUniform1i(MatrixID, value);
+    GLuint location = glGetUniformLocation(handle, name);
+    glUniform1i(location, value);
 }
 
 void Program::glUniformFloat(const char* name, float value)
 {
-    GLuint MatrixID = glGetUniformLocation(handle, name);
-    glUniform1f(MatrixID, value);
+    GLuint location = glGetUniformLocation(handle, name);
+    glUniform1f(location, value);
 }
 
 void Program::glUniformMatrix4(const char* name, glm::mat4 mat4)

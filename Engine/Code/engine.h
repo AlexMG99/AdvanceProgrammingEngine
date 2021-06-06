@@ -187,6 +187,7 @@ struct App
     u32 waterProgramIdx;
     u32 clippingProgramIdx;
     u32 simpleProgramIdx;
+    u32 irradianceShaderIdx;
     u32 skyboxProgramId;
     GLuint lightingPassProgram;
     GLuint bakeCubeMapProgram;
@@ -251,8 +252,11 @@ struct App
     FBO captureFBO;
     RBO captureRBO;
 
+    // Lighting pass Shader parameters
     int renderMode = 0;
-
+    float F0 = 0.5;
+    float roughness = 0.1;
+    int skyboxIdx = 0;
     std::vector<Light> lights;
 };
 

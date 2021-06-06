@@ -37,7 +37,9 @@ uniform mat4 viewMatrix;
 uniform int renderMode;
 
 uniform float roughness= 1.0;
+uniform float maxFresnel = 1.0; 
 uniform vec3 F0 = vec3(0.5);
+
 vec3 vPosition;
 vec3 V; // Camera to position
 const float PI = 3.14159265359;
@@ -86,7 +88,7 @@ vec3 vPosition = texture(gPosition, vTexCoord).xyz;
 	vec3 V = normalize(uCameraPosition - vPosition);
 
 	float cosTheta = dot(normal, V);
-	cosTheta = smoothstep(roughness,1.0 , cosTheta);
+	cosTheta = smoothstep(roughness,maxFresnel , cosTheta);
 	vec3 endColor =  (ambient + diffuse + specular);
 	vec3 fresnel  = fresnelSchlick(cosTheta, vec3(F0));
 	//fresnel = fresnelSchlickRoughness(max(cosTheta, 0.0), vec3(F0), roughness); 

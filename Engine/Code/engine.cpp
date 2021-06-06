@@ -314,7 +314,8 @@ void Gui(App* app)
     const char* skyboxType[] = { "Skybox 01" , "Skybox 01 Irradiance" };
     ImGui::Combo("Skybox type", &app->skyboxIdx, skyboxType, IM_ARRAYSIZE(skyboxType));
     ImGui::DragFloat("F0: ", &app->F0, 0.1,0.0,1.0);
-    ImGui::DragFloat("Roughness: ", &app->roughness, 0.1, 0.0, 1.0);
+    ImGui::DragFloat("Min Fresnel: ", &app->minFresnel, 0.1, 0.0, 1.0);
+    ImGui::DragFloat("Max Fresnel: ", &app->maxFresnel, 0.1, 0.0, 1.0);
 
     ImGui::Separator();
 
@@ -752,7 +753,8 @@ void LightingPass(App* app)
     lightingProgram.glUniformInt("renderMode", app->renderMode);
     lightingProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
     lightingProgram.glUniformVec3("F0", glm::vec3(app->F0));
-    lightingProgram.glUniformFloat("roughness", (app->roughness));
+    lightingProgram.glUniformFloat("roughness", (app->minFresnel));
+    lightingProgram.glUniformFloat("maxFresnel", (app->maxFresnel));
     app->enviroment.BindEnviroment(0);
     app->enviroment.BindIrradiaceMap(5);
 

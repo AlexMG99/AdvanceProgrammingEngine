@@ -255,7 +255,8 @@ struct App
     // Lighting pass Shader parameters
     int renderMode = 0;
     float F0 = 0.5;
-    float roughness = 0.1;
+    float minFresnel = 0.1;
+    float maxFresnel = 1.0;
     int skyboxIdx = 0;
     std::vector<Light> lights;
 };

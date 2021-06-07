@@ -139,11 +139,9 @@ void main()
 		
 	vec3 vPosition = texture(gPosition, vTexCoord).xyz;
 
-	vec3 vViewDir	= normalize(uCameraPosition - vPosition);
-
 	// Properties
 	vec3 norm = normalize(texture(gNormal, vTexCoord).xyz);
-	vec3 viewDir = normalize(vViewDir - vPosition);
+	vec3 viewDir = normalize(uCameraPosition - vPosition);
 
 	// Lights
 	vec3 result = vec3(0,0,0);

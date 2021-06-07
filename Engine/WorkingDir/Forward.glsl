@@ -22,7 +22,7 @@ void main()
 {
 	vTexCoord	= aTexCoord;
 	vPosition	= vec3(uWorldMatrix * vec4(aPosition, 1.0));
-	vNormal		= mat3(transpose(inverse(uWorldMatrix))) * aNormal;
+	vNormal		= normalize(mat3(transpose(inverse(uWorldMatrix))) * aNormal);
 	gl_Position = uWorlViewProjectionMatrix * vec4(aPosition, 1.0);
 }
 

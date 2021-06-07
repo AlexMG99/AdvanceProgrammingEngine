@@ -138,6 +138,7 @@ void main()
 		};
 		
 	vec3 vPosition = texture(gPosition, vTexCoord).xyz;
+
 	vec3 vViewDir	= normalize(uCameraPosition - vPosition);
 
 	// Properties

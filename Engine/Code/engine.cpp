@@ -553,7 +553,7 @@ void RenderScene(App* app, Camera cam, Program& program)
     {
         Entity& entity = app->entities[i];
 
-        if (entity.modelIndex == app->waterEffect.waterPlaneEntity->modelIndex && app->waterEffect.active && app->renderMode == Mode::DeferredRendering)
+        if (entity.modelIndex == app->waterEffect.waterPlaneEntity->modelIndex && app->waterEffect.active  && app->mode == Mode::DeferredRendering)
             continue;
 
         AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 

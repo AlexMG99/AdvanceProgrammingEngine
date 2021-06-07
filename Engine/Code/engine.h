@@ -76,6 +76,17 @@ struct WaterShader {
     unsigned int fboRefraction;
 
     Entity* waterPlaneEntity;
+
+    bool active = true;
+
+    // Water parameters
+    vec2 waveLength = vec2(1.0);
+    vec2 waveStrength = vec2(0.02);
+    float turbidityDistance = 2.5;
+    float shineDamper = 20.0;
+    float reflectivity = 0.6;
+
+    vec2 speed = vec2(0.1);
 };
 
 struct OpenGLInfo
@@ -180,6 +191,8 @@ struct App
 
     // Water
     WaterShader waterEffect;
+
+
 
     // program indices
     u32 texturedGeometryProgramIdx;

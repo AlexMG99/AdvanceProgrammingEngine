@@ -236,6 +236,7 @@ void Init(App* app)
     app->entities.push_back(entity);
 
     app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
+    app->entities.push_back(*app->waterEffect.waterPlaneEntity);
 
     //light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
   //app->lights.push_back(light);
@@ -319,6 +320,24 @@ void Gui(App* app)
 
     ImGui::Separator();
 
+    ImGui::Text("Water:"); ImGui::SameLine(); ImGui::Checkbox("Water Checkbox", &app->waterEffect.active);
+
+    ImGui::Text("Wave Length:"); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WL X    ", &app->waterEffect.waveLength.x, 0.01, 0.1, 5); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WL Y    ", &app->waterEffect.waveLength.y, 0.01, 0.1, 5);
+
+    ImGui::Text("Wave Strength:"); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WS X   ", &app->waterEffect.waveStrength.x, 0.01, 0.01, 1.0); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WS Y    ", &app->waterEffect.waveStrength.y, 0.01, 0.01, 1.0); ImGui::SetNextItemWidth(100);
+
+    ImGui::DragFloat("Turbidity Distance    ", &app->waterEffect.turbidityDistance, 0.1, 0, 20); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Shine", &app->waterEffect.shineDamper, 0.1, 0.5, 256); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("Reflectivity  ", &app->waterEffect.reflectivity, 0.1, 0, 256);
+
+    ImGui::Text("Wave Speed:"); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WSp X    ", &app->waterEffect.speed.x, 0.01, 0.1, 5); ImGui::SameLine(); ImGui::SetNextItemWidth(100);
+    ImGui::DragFloat("WSp Y    ", &app->waterEffect.speed.y, 0.01, 0.1, 5);
+
 
     if (ImGui::CollapsingHeader("OpenGL Info"))
     {
@@ -395,13 +414,13 @@ void Render(App* app)
             break;
         case Mode_WaterShader:
             {
-
-                PassWaterScene(app, WaterScenePart::Reflection);
-
-                PassWaterScene(app, WaterScenePart::Refraction);
+                if (app->waterEffect.active)
+                {
+                    PassWaterScene(app, WaterScenePart::Reflection);
+                    PassWaterScene(app, WaterScenePart::Refraction);
+                }
 
                 RenderInGBuffer(app);
-
                 LightingPass(app);
             }
         break;
@@ -527,8 +546,12 @@ void RenderScene(App* app, Camera cam, Program& program)
     // Local Params
     for (int i = 0; i < app->entities.size(); ++i)
     {
-        AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
         Entity& entity = app->entities[i];
+
+        if (entity.modelIndex == app->waterEffect.waterPlaneEntity->modelIndex && app->waterEffect.active)
+            continue;
+
+        AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 
         glm::mat4    world = entity.worldMatrix;
         glm::mat4    worldViewProjection = cam.projViewMatrix * entity.worldMatrix;
 
@@ -639,7 +662,8 @@ void RenderInGBuffer(App* app)
 
     RenderScene(app, *app->cam, texturedMeshProgram);
 
-    RenderWater(app);
+    if(app->waterEffect.active)
+        RenderWater(app);
 }
 
 void RenderSkybox(App* app, Camera*  cam)
@@ -689,7 +713,14 @@ void RenderWater(App* app)
     waterShader.glUniformInt("normalMap", 4);
     waterShader.glUniformInt("dudvMap", 5);
 
-    waterShader.glUniformFloat("time", app->time);
+    // Water parameters
+    waterShader.glUniformVec2("waveLength", app->waterEffect.waveLength);
+    waterShader.glUniformVec2("waveStrength", app->waterEffect.waveStrength);
+    waterShader.glUniformFloat("turbidityDistance", app->waterEffect.turbidityDistance);
+    waterShader.glUniformFloat("shineDamper", app->waterEffect.shineDamper);
+    waterShader.glUniformFloat("reflectivity", app->waterEffect.reflectivity);
+
+    waterShader.glUniformVec2("speed", app->waterEffect.speed * app->time);
 
     app->time += app->deltaTime * 0.25;
 

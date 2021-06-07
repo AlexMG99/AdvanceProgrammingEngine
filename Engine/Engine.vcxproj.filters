@@ -596,5 +596,7 @@
     <None Include="WorkingDir\Simple.glsl" />
     <None Include="WorkingDir\skybox.glsl" />
     <None Include="WorkingDir\Convolution.glsl" />
+    <None Include="WorkingDir\Forward.glsl" />
+    <None Include="WorkingDir\SkyboxForward.glsl" />
   </ItemGroup>
 </Project>

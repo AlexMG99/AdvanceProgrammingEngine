@@ -539,10 +539,12 @@
     <None Include="ThirdParty\glm\include\glm\gtx\wrap.inl" />
     <None Include="WorkingDir\Convolution.glsl" />
     <None Include="WorkingDir\deferred.glsl" />
+    <None Include="WorkingDir\Forward.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
     <None Include="WorkingDir\hdrToCubemap.glsl" />
     <None Include="WorkingDir\Simple.glsl" />
     <None Include="WorkingDir\skybox.glsl" />
+    <None Include="WorkingDir\SkyboxForward.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

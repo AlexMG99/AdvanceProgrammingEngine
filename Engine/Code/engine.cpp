@@ -193,10 +193,23 @@ void Init(App* app)
     //Load Water Shader
     app->waterProgramIdx = LoadProgram(app, "waterShader.glsl", "TEXTURED_GEOMETRY");
     app->skyboxProgramId = LoadProgram(app, "skybox.glsl", "SKYBOX");
+    app->skyboxForwardProgramId = LoadProgram(app, "skyboxForward.glsl", "SKYBOXFORWARD");
+    app->forwardProgramIdx = LoadProgram(app, "Forward.glsl", "FORWARD");
+    app->clippingProgramIdx = LoadProgram(app, "shadersClipping.glsl", "TEXTURED_GEOMETRY");
+    Program& forwardProgram = app->programs[app->forwardProgramIdx];
+    forwardProgram.Bind();
+    forwardProgram.glUniformInt("environmentMap", 1);
+    forwardProgram.glUniformInt("irradianceMap", 2);
+
     Program& skyboxProgram = app->programs[app->skyboxProgramId];
     skyboxProgram.Bind();
     skyboxProgram.glUniformInt("environmentMap", 0);
-    app->clippingProgramIdx = LoadProgram(app, "shadersClipping.glsl", "TEXTURED_GEOMETRY");
+
+
+    Program& skyboxProgramForward = app->programs[app->skyboxForwardProgramId];
+    skyboxProgram.Bind();
+    skyboxProgram.glUniformInt("environmentMap", 0);
+ 
 
     u32 patrickID = LoadModel(app, "Patrick/Patrick.obj");
     u32 planeID = LoadModel(app, "Plane/plane.obj");
@@ -219,28 +232,21 @@ void Init(App* app)
     app->normalWaterIdx = LoadTexture2D(app, "Water/normalMap.png");
     app->dudvWaterIdx = LoadTexture2D(app, "Water/waterDUDV.png");
 
-    app->mode = Mode::Mode_WaterShader;
-
-   // app->mode = Mode_WaterShader;
+    app->mode = Mode::ForwardRendering;
 
     //Entities =====
     Entity entity;
-    //app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
+    app->entities.push_back(Entity(vec3(0.0, 0.0, 0.0), patrickID));
 
-    //entity = Entity(vec3(0.0, 0.0, 0.0), app->cubeModel);
-    //entity.Rotate(0, -30, 0);
-    //app->entities.push_back(entity);
-
-     // Mountain and water assets
     entity = Entity(vec3(0.0, -0.2, 0.0), mountainModel);
     app->entities.push_back(entity);
 
     app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
-
-    //light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
-  //app->lights.push_back(light);
     entity = Entity(vec3(3, 2, 3), sphereID);
     app->entities.push_back(entity);
+
+  
+
   //
 
        // entity = Entity(vec3(4.0, 0.0, 3.0), patrickID);
@@ -259,16 +265,19 @@ void Init(App* app)
     app->sun = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
     app->lights.push_back(app->sun);
     
-    //Light light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
-    //app->lights.push_back(light);
-    //entity = Entity(vec3(10, 10, 10), sphereID);
-    //app->entities.push_back(entity);
-    //
-    //
-    //light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
-    //app->lights.push_back(light);
-    //entity = Entity(vec3(-5, 5, 0), sphereID);
-    //app->entities.push_back(entity);
+    Light light = Light(LightType_Point, vec3(1.0, .0, .0), vec3(0, -1, 0), vec3(-10, 0, 3));
+    app->lights.push_back(light);
+    entity = Entity(vec3(10, 10, 10), sphereID);
+    app->entities.push_back(entity);
+    
+    light = Light(LightType_Point, vec3(0.0, .0, 1.0), vec3(0, -1, 0), vec3(-5, 5, 0));
+    app->lights.push_back(light);
+    entity = Entity(vec3(-5, 5, 0), sphereID);
+    app->entities.push_back(entity);
+
+    light = Light(LightType_Point, vec3(0.0, 1.0, .0), vec3(0, -1, 0), vec3(3, 2, 3));
+    app->lights.push_back(light);
+
 }
 
 void Gui(App* app)
@@ -308,11 +317,16 @@ void Gui(App* app)
     ImGui::DragFloat("B    ", &app->lights[0].color.z, 0.01, 0, 1.0); ImGui::SetNextItemWidth(100);
 
     // Todo apply changes to camera when properties modified
-
+    static int mode = (int)app->mode;
+    const char* modeString[] = { "Deferred Rendering" , "Forward Rendering" };
+    ImGui::Combo("Render Mode", &mode, modeString, IM_ARRAYSIZE(modeString));
+    app->mode = mode == 0 ? Mode::DeferredRendering  : Mode::ForwardRendering;
     const char* items[] = { "Final", "Normal", "Depth", "Position", "Reflection"};
     ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
     const char* skyboxType[] = { "Skybox 01" , "Skybox 01 Irradiance" };
     ImGui::Combo("Skybox type", &app->skyboxIdx, skyboxType, IM_ARRAYSIZE(skyboxType));
+    
+   
     ImGui::DragFloat("F0: ", &app->F0, 0.1,0.0,1.0);
     ImGui::DragFloat("Min Fresnel: ", &app->minFresnel, 0.1, 0.0, 1.0);
     ImGui::DragFloat("Max Fresnel: ", &app->maxFresnel, 0.1, 0.0, 1.0);
@@ -340,8 +354,6 @@ void Gui(App* app)
         }
         ImGui::Text(openGL.c_str());
     }
-
-
 
     ImGui::End();
 }
@@ -385,15 +397,12 @@ void Render(App* app)
 {
     switch (app->mode)
     {
-        case Mode_TexturedQuad:
+        case ForwardRendering:
             {
-                RenderInGBuffer(app);
-
-                LightingPass(app);
-                
+                ForwardRender(app); 
             }
             break;
-        case Mode_WaterShader:
+        case DeferredRendering:
             {
 
                 PassWaterScene(app, WaterScenePart::Reflection);
@@ -539,6 +548,9 @@ void RenderScene(App* app, Camera cam, Program& program)
 
         glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, entity.localParamsOffset, entity.localParamsSize);
 
+        glUnmapBuffer(GL_UNIFORM_BUFFER);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
         Model& model = app->models[entity.modelIndex];
         Mesh& mesh = app->meshes[model.meshIdx];
 
@@ -666,6 +678,31 @@ void RenderSkybox(App* app, Camera*  cam)
     glEnable(GL_DEPTH_TEST);
 }
 
+void RenderSkyboxForward(App* app, Camera* cam)
+{
+    glDisable(GL_DEPTH_TEST);
+    Program& skyProgram = app->programs[app->skyboxForwardProgramId];
+    skyProgram.Bind();
+    skyProgram.glUniformMatrix4("projection", cam->projMatrix);
+    skyProgram.glUniformMatrix4("view", cam->viewMatrix);
+
+    if (app->skyboxIdx == 0)
+    {
+        app->enviroment.BindEnviroment(0);
+
+    }
+    else
+    {
+        app->enviroment.BindIrradiaceMap(0);
+    }
+
+    Model& cubeModel = app->models[app->cubeModel];
+    cubeModel.Render(app, skyProgram);
+
+    glEnable(GL_DEPTH_TEST);
+}
+
+
 void RenderWater(App* app)
 {
     Program& waterShader = app->programs[app->waterProgramIdx];
@@ -709,6 +746,63 @@ void RenderWater(App* app)
     plane.Render(app, waterShader);
 }
 
+void ForwardRender(App* app)
+{
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Deferred Shading ======
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Draw in the screen ===
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    RenderSkyboxForward(app, app->cam);
+
+    Program& lightingProgram = app->programs[app->forwardProgramIdx];
+    glUseProgram(lightingProgram.handle);
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, app->deferredbuffer.handle);
+    app->deferredbuffer.head = 0;
+    app->deferredbuffer.data = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+    
+    // GlobalParams
+    app->globalParamsOffset = app->deferredbuffer.head;
+    
+    PushVec3(app->deferredbuffer, app->cam->position);
+    PushUInt(app->deferredbuffer, app->lights.size());
+    
+    for (u32 i = 0; i < app->lights.size(); ++i)
+    {
+        AlignHead(app->deferredbuffer, sizeof(vec4));
+    
+        Light& light = app->lights[i];
+        PushUInt(app->deferredbuffer, light.type);
+        PushVec3(app->deferredbuffer, normalize(light.color));
+        PushVec3(app->deferredbuffer, normalize(light.direction));
+        PushVec3(app->deferredbuffer, light.position);
+    
+    }
+    
+    app->globalParamsSize = app->deferredbuffer.head - app->globalParamsOffset;
+    
+    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->deferredbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+    
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    lightingProgram.glUniformInt("renderMode", app->renderMode);
+    lightingProgram.glUniformMatrix4("viewMatrix", app->cam->viewMatrix);
+    lightingProgram.glUniformVec3("F0", glm::vec3(app->F0));
+    lightingProgram.glUniformFloat("roughness", (app->minFresnel));
+    lightingProgram.glUniformFloat("maxFresnel", (app->maxFresnel));
+    app->enviroment.BindEnviroment(1);
+    app->enviroment.BindIrradiaceMap(2);
+    //
+    RenderScene(app, *app->cam, lightingProgram);
+    //
+   
+}
 void LightingPass(App* app)
 {
     glUnmapBuffer(GL_UNIFORM_BUFFER);

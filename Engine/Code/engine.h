@@ -53,10 +53,10 @@ struct Light
 };
 
 
-enum Mode
+enum Mode : int
 {
-    Mode_TexturedQuad,
-    Mode_WaterShader,
+    ForwardRendering,
+    DeferredRendering,
     Mode_Count
 };
 
@@ -189,6 +189,8 @@ struct App
     u32 simpleProgramIdx;
     u32 irradianceShaderIdx;
     u32 skyboxProgramId;
+    u32 skyboxForwardProgramId;
+    u32 forwardProgramIdx;
     GLuint lightingPassProgram;
     GLuint bakeCubeMapProgram;
 
@@ -286,8 +288,13 @@ void RenderInGBuffer(App* app);
 
 void RenderSkybox(App* app, Camera* cam);
 
+void RenderSkyboxForward(App* app, Camera* cam);
+
+
 void RenderWater(App* app);
 
 void LightingPass(App* app);
+
+void ForwardRender(App* app);
 
 

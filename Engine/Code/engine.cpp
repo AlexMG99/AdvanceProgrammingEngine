@@ -257,17 +257,17 @@ void Init(App* app)
     app->sun = Light(LightType_Directional, vec3(1.0,1,1), vec3(0, -1,0 ), vec3(10, 10, 10));
     app->lights.push_back(app->sun);
 
-   // for (int i = 0; i < 30; i++)
-   // {
-   //     for (int j = 0; j < 30; j++)
-   //     {
-   //         Light light = Light(LightType_Point, vec3(1.0, 1.0, 1.0), vec3(0, -1, 0), vec3(i + 100, 2, 100 + j));
-   //         app->lights.push_back(light);
-   //
-   //        // app->entities.push_back(Entity(vec3(i + 100, 2, 100 + j), sphereID));
-   //     }
-   //
-   // }
+  for (int i = 0; i < 30; i++)
+  {
+      for (int j = 0; j < 30; j++)
+      {
+          Light light = Light(LightType_Point, vec3(1.0, 1.0, 1.0), vec3(0, -1, 0), vec3(i + 100, 2, 100 + j));
+          app->lights.push_back(light);
+  
+         // app->entities.push_back(Entity(vec3(i + 100, 2, 100 + j), sphereID));
+      }
+  
+  }
   
 
 
@@ -553,7 +553,7 @@ void RenderScene(App* app, Camera cam, Program& program)
     {
         Entity& entity = app->entities[i];
 
-        if (entity.modelIndex == app->waterEffect.waterPlaneEntity->modelIndex && app->waterEffect.active && app->renderMode == Mode::DeferredRendering)
+        if (entity.modelIndex == app->waterEffect.waterPlaneEntity->modelIndex && app->waterEffect.active)
             continue;
 
         AlignHead(app->cbuffer, app->uniformBlockAligment); // TODO set the 0 value to an uniformBlockAligment 

@@ -186,6 +186,8 @@ void main()
 
 		vec3 viewPos = vec3(viewMatrix * vec4(vPosition, 1.0));
 		oColor.rgb = texture(environmentMap, reflect(-vViewDir, N)).xyz;
+		oColor.rgb = oColor.rgb / (oColor.rgb + vec3(1.0));
+    	oColor.rgb = pow(oColor.rgb, vec3(1.0/2.2)); 
 		oColor.a = 1.0;
 	}
 	//oColor = vec4(1.0,0.0,0.0,1.0);

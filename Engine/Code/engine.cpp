@@ -232,7 +232,7 @@ void Init(App* app)
     app->normalWaterIdx = LoadTexture2D(app, "Water/normalMap.png");
     app->dudvWaterIdx = LoadTexture2D(app, "Water/waterDUDV.png");
 
-    app->mode = Mode::ForwardRendering;
+    app->mode = Mode::DeferredRendering;
 
     //Entities =====
     app->waterEffect.waterPlaneEntity = new Entity(vec3(5.0, 0.0, 0.0), planeID);
@@ -311,9 +311,9 @@ void Gui(App* app)
 
     // Todo apply changes to camera when properties modified
     static int mode = (int)app->mode;
-    const char* modeString[] = { "Deferred Rendering" , "Forward Rendering" };
+    const char* modeString[] = { "Deferred Rendering" , "Forward Rendering", "Texturing Rendering"};
     ImGui::Combo("Render Mode", &mode, modeString, IM_ARRAYSIZE(modeString));
-    app->mode = mode == 0 ? Mode::DeferredRendering  : Mode::ForwardRendering;
+    app->mode = mode == 0 ? Mode::DeferredRendering : (mode == 1 ? Mode::ForwardRendering : Mode::TextureRendering);
     const char* items[] = { "Final", "Normal", "Depth", "Position", "Reflection"};
     ImGui::Combo("Render mode", &app->renderMode, items, IM_ARRAYSIZE(items));
     const char* skyboxType[] = { "Skybox 01" , "Skybox 01 Irradiance" };
@@ -428,6 +428,12 @@ void Render(App* app)
                 RenderInGBuffer(app);
                 LightingPass(app);
             }
+        break;
+
+        case TextureRendering:
+        {
+            RenderTexture2D(app, WaterScenePart::Refraction);
+        }
         break;
 
         default:
@@ -889,7 +895,6 @@ void LightingPass(App* app)
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, app->gPosition);
-    
    
 
     Model& modelQuad = app->models[app->quadModel];
@@ -897,4 +902,58 @@ void LightingPass(App* app)
 
     glUnmapBuffer(GL_UNIFORM_BUFFER);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+
+void RenderTexture2D(App* app, WaterScenePart part)
+{
+    Camera camera = *app->cam;
+    if (part == WaterScenePart::Reflection)
+    {
+        camera.position.y = -camera.position.y;
+        camera.rotation.x = -camera.rotation.x;
+        camera.CalculateProjViewMatrix();
+
+    }
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CLIP_DISTANCE0);
+
+    // Draw function
+    glClearColor(0.f, 0.f, 0.f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    RenderSkybox(app, &camera);
+
+    Program& clippingShader = app->programs[app->clippingProgramIdx];
+    clippingShader.Bind();
+    clippingShader.glUniformMatrix4("uViewMatrix", camera.viewMatrix);
+
+    if (part == WaterScenePart::Reflection)
+    {
+        clippingShader.glUniformVec4("clippingPlane", glm::vec4(0, 1, 0, 0));
+    }
+    else
+    {
+        clippingShader.glUniformVec4("clippingPlane", glm::vec4(0, -1, 0, 0));
+    }
+
+    app->mode = DeferredRendering;
+
+    RenderScene(app, camera, clippingShader);
+
+    app->mode = TextureRendering;
+
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Deferred Shading ======
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

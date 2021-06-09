@@ -57,6 +57,7 @@ enum Mode : int
 {
     ForwardRendering,
     DeferredRendering,
+    TextureRendering,
     Mode_Count
 };
 
@@ -309,6 +310,8 @@ void RenderSkyboxForward(App* app, Camera* cam);
 void RenderWater(App* app);
 
 void LightingPass(App* app);
+
+void RenderTexture2D(App* app, WaterScenePart part);
 
 void ForwardRender(App* app);
 
